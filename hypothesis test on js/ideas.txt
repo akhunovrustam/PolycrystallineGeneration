@@ -1,0 +1,11 @@
+1. even for 2d there are examples when you cannot divide two sets of points into part with the half of whole amount of particles.
+this is why if let's say we have probability of crossover 0.01% then we choose 0.1% of all individuals in random order and choose
+10% from them. but if meet some pair that cannot be crossovered we just skip it and try to get new pair until we got 10%.
+2. the strategy for crossover is to divide one individual ot half-half particles by some crossing plane. then test the same plane for
+the second individual. if for the second individual we do not have half-half division of particles we have to try to rotate plane such
+that for the first individual we have the same half-half division but for the second one we change division and try to reach half-half
+division. if for current first individual's division we cannot reach half-half division for the second one we try it for more 4 
+first individual's division. if we could not reach it in 5 attempts then we mark this pair as uncrossoverable pair and we make new pair
+and try the same procedure for the new pair.
+
+3. for the selection of Genetics Algo we can use Random, Tournament and Bolzman selections.
