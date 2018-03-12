@@ -102,7 +102,7 @@ void LatticeGeneratorClass::calculateGrainPlanes(vector<int> &f_vert,vector<doub
 		l=3*f_vert[j+k+1];
 		myfile << "Al " << v[l] << " " << v[l+1] << " " << v[l+2] << "\n";
 	
-		float dist = sqrt(v[l]*x + v[l+1]*y + v[l+2]*z);
+		float dist = sqrt((v[l]-x)*(v[l]-x) + (v[l+1]-y)*(v[l+1]-y) + (v[l+2]-z)*(v[l+2]-z));
 		if (max < dist) max = dist;
 	}
 	myfile.close();

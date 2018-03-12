@@ -8,4 +8,4 @@ division. if for current first individual's division we cannot reach half-half d
 first individual's division. if we could not reach it in 5 attempts then we mark this pair as uncrossoverable pair and we make new pair
 and try the same procedure for the new pair.
 
-3. for the selection of Genetics Algo we can use Random, Tournament and Bolzman selections.
+3. for the selection of Genetics Algo we can use Random, Tournament and Boltzman selections.
