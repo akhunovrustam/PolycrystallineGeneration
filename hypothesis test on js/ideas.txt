@@ -9,3 +9,14 @@ first individual's division. if we could not reach it in 5 attempts then we mark
 and try the same procedure for the new pair.
 
 3. for the selection of Genetics Algo we can use Random, Tournament and Boltzman selections.
+
+4. the selection is organized as follows: we save best one or more individuals (some percent, let's say 5-10%) other 
+individuals of the new offspring are made by tournament crossover (random selection of two individuals and then 
+selection of individual with the highest fitness). after crossover we make mutation for some percent.
+
+
+
+Bibliography:
+1. Shen, Y. et al. Constructing three-dimensional (3D) nanocrystalline models of Li4SiO4 for numerical modeling and simulation. Sci. Rep. 5, 10698; doi: 10.1038/srep10698 (2015).
+2. S. N. Sivanandam , S. N. Deepa, Introduction to Genetic Algorithms, Springer Publishing Company, Incorporated, 2007
+3. Melanie Mitchell, An Introduction to Genetic Algorithms, MIT Press, Cambridge, MA, 1998
