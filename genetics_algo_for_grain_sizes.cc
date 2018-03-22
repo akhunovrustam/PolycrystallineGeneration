@@ -115,9 +115,91 @@ container** interchage_halves(container* ind1, container* ind2, k, b)
 	return [offspring1, offspring2];
 }
 
+container** crossover_by_mapping(container** con)
+{
+	int offspring_amount = 0;
+	container** offspring_containers = new container*[population_size];
+	
+	while (offspring_amount < population_size)
+	{
+		bool cannot_crossover = false;
+		container* ind1 = tournament_selection(con);
+		container* ind2 = tournament_selection(con);
+		
+		int mapping[particels];
+		double dist = 100;
+		//making mapping from particels of ind1 to ind2
+		for (int i = 0; i < particles; i++)
+			for (int j = 0; j < particles; j++)
+			{
+				double cur_dist = sqrt(pow(ind1->p[i][0] - ind2->p[j][0], 2) + pow(ind1->p[i][1] - ind2->p[j][1], 2)
+					+ pow(ind1->p[i][2] - ind2->p[j][2], 2));
+					
+				if (dist > cur_dist)
+				{
+					dist = cur_dist;
+					mapping[i] = j;
+				}
+			}
+			
+		int first_particles = rnd()*particles;
+		int selected_particles = 0;
+		//FIND HOW TO GET PARTICLES COORDS BY USING ID OF THE PARTICLE!!!!
+		voronoicell_neighbor c;
+		vector<int> neigh;
+		double x1, y1, z1;
+		x1 = ind1->p[0][0];
+		y1 = ind1->p[0][1];
+		z1 = ind1->p[0][2];
+		int id = ind1->id[0][0];
+		
+		double **points;
+		points = new double*[first_particles];
+		points[selected_particles] = new double**[4];
+		// points[selected_particles][0] = x1;
+		// points[selected_particles][1] = y1;
+		// points[selected_particles][2] = z1;
+		points[selected_particles][3] = id;
+		
+		int not_calculated_points = 1;
+		while (selected_particles < first_particles){
+			int ijk;
+			for (int i = 0; i < ind1->nx*ind1->ny*ind1->nz; i++)
+				for (int j = 0; j < ind1->co[i]; j++)
+					if (points[selected_particles][3] == ind1->id[i][j])
+						goto ijk_finder;
+
+			label: ijk_finder;
+			
+			double *pp=p[i]+3*j;
+			
+			points[selected_particles][0] = *(pp++);
+			points[selected_particles][1] = *(pp++);
+			points[selected_particles][2] = *(pp++);
+			selected_particles++;
+			if (not_calculated_points < first_particles)
+				if(ind1->compute_cell(c, i, j)) {
+					
+					c.neighbors(neigh);
+					
+					for (std::vector<int>::iterator it = neigh.begin() ; it != neigh.end(); ++it)
+						if (not_calculated_points < first_particles) points[not_calculated_points++][3] = *it;
+						else break;
+						
+				}	
+		}	
+	}	
+}
+/*
 container** crossover(container** con)
 {
 	// std::map<int,bool> parent_pool_index;
+	// show content:
+	  // for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
+		// std::cout << it->first << " => " << it->second << '\n';
+
+	  // return 0;
+	  
 	int offspring_amount = 0;
 	container** offspring_containers = new container*[population_size];
 	
@@ -234,14 +316,11 @@ container** crossover(container** con)
 	}
 	
 	
-	  // show content:
-	  // for (std::map<char,int>::iterator it=mymap.begin(); it!=mymap.end(); ++it)
-		// std::cout << it->first << " => " << it->second << '\n';
-
-	  // return 0;
+	  
 
 
 }
+*/
 
 int main() {
 	// srand (time(NULL));
