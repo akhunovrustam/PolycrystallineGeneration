@@ -13,6 +13,8 @@
 #include <map>
 #include <fstream>
 #include <sstream>
+#include <ctime>
+#include <string>
 #include "voro++.hh"
 
 	
@@ -20,19 +22,20 @@ using namespace std;
 using namespace voro;
 // using namespace LatticeGeneratorClass;
 
-#define penalty_steps 100
-#define penalty_step 0.01
-#define max_iterations 100
-#define max_allowed_penalty 0.01
+#define penalty_steps 1000
+#define penalty_step 0.025
+#define max_iterations 1000
+#define max_allowed_penalty 0.0001
+#define surviving_size 4
 #define population_size 32
-#define particles 100
-#define mutation_probability 0.91
+#define particles 1000
+#define mutation_probability 0.10
 #define mutation_max_applitude 0.05
 #define crossover_probability 0.05
-
-static const double x_min=-1,x_max=1;
-static const double y_min=-1,y_max=1;
-static const double z_min=-1,z_max=1;
+#define half_boxside 2.5
+static const double x_min=-half_boxside,x_max=half_boxside;
+static const double y_min=-half_boxside,y_max=half_boxside;
+static const double z_min=-half_boxside,z_max=half_boxside;
 static const double shift_value = 0.0001;
 	
 double rnd() {return double(rand())/RAND_MAX;}
@@ -40,7 +43,7 @@ double rnd() {return double(rand())/RAND_MAX;}
 double original_distribution(double point)
 {
 	double sigma = 0.35;
-	double mju = 0.0;
+	double mju = -0.0;
 	double res = 1/(point*sigma*sqrt(2*M_PI))*exp(-pow(log(point) - mju, 2)/(2*pow(sigma, 2)));
 	return res;
 }
@@ -105,10 +108,26 @@ double size_penalty(double* size_dist)
 	return ret;
 }
 
+double mutate(double val, double min, double max)
+{
+	int max_iter = 100;
+	int iter = 0;
+	do {
+		iter++;
+		if (iter > max_iter) {
+			val = (max + min)/2;
+			break;
+		}
+		val += rnd()*mutation_max_applitude*(rnd() > 0.5 ? -1 : 1);
+	} while (val < min || val > max);
+	// std::cout << "val " << val << "\n";
+	return val;
+}
+
 void mutation(container ***con1)
 {
 	container **con = *con1;
-	for (int i = 0; i < population_size; i++){
+	for (int i = surviving_size; i < population_size; i++){
 		double new_points[particles][3];
 		bool point_changed = false;
 		
@@ -130,9 +149,9 @@ void mutation(container ***con1)
 				// std::cout << "rnd mutat " << (rnd_index1 == rnd_index2) << "\n";
 				if (rnd_index1 == rnd_index2){
 					point_changed = true;
-					new_points[new_points_cntr][0] = x + rnd()*mutation_max_applitude*(rnd() > 0.5 ? -1 : 1);
-					new_points[new_points_cntr][1] = y + rnd()*mutation_max_applitude*(rnd() > 0.5 ? -1 : 1);
-					new_points[new_points_cntr][2] = z + rnd()*mutation_max_applitude*(rnd() > 0.5 ? -1 : 1);
+					new_points[new_points_cntr][0] = mutate(x, x_min, x_max);
+					new_points[new_points_cntr][1] = mutate(y, y_min, y_max);
+					new_points[new_points_cntr][2] = mutate(z, z_min, z_max);
 				}
 				else {
 					new_points[new_points_cntr][0] = x;
@@ -205,22 +224,48 @@ struct point_for_crossover {
 	bool is_interchanged;
 } ;
 
+point_for_crossover* get_ind_points(container* ind1, bool to_print = false)
+{
+	point_for_crossover points[particles];
+	int particles_count = 0;
+	
+	for (int h = 0; h < ind1->nx*ind1->ny*ind1->nz; h++)
+		for (int k = 0; k < ind1->co[h]; k++)
+		{
+			double *pp1=ind1->p[h]+3*k;
+			double x1 = *(pp1++);
+			double y1 = *(pp1++);
+			double z1 = *(pp1++);
+			point_for_crossover pnt = {x1, y1, z1, h, k, false};
+			points[particles_count++] = pnt;
+			
+			std::cout << "failed ind points: " << " block:" << h << " index:" << k  << " coords:" << x1 << " " << y1 << " " << z1 << "\n";
+		}
+}
+
 container** crossover_by_mapping(container** con, double** size_dist)
 {
-	int offspring_amount = 0;
+	int offspring_amount = surviving_size;
 	voronoicell_neighbor c1;
 	container** offspring_containers = new container*[population_size + 1];
-		
+	
+	std::map<double, int> penalty_rating;
+	for (int i = 0; i < population_size; i++)
+		penalty_rating[size_penalty(size_dist[i])] = i;
+	
+	int survived = 0;
+	for (std::map<double, int>::iterator it=penalty_rating.begin(); it!=penalty_rating.end(); ++it)
+		if (survived < surviving_size)
+			offspring_containers[survived++] = con[it->second];
+	
 	while (offspring_amount < population_size)
 	{
-		// std::cout << "cross1" << "\n";
 		bool cannot_crossover = false;
 		int index1 = tournament_selection(size_dist);
-		// std::cout << "cross2" << "\n";
 		container* ind1 = con[index1];
 		int index2 = tournament_selection(size_dist, index1);
 		container* ind2 = con[index2];
-		// std::cout << "cross2" << "\n";
+		
 		//making mapping ID->xyz_bool where bool is if point goes to ind1 or not
 		std::map<int, point_for_crossover> id1_to_coords;
 		for (int i = 0; i < ind1->nx*ind1->ny*ind1->nz; i++)
@@ -234,7 +279,8 @@ container** crossover_by_mapping(container** con, double** size_dist)
 			}
 		}
 		// for (std::map<int, point_for_crossover>::iterator it=id1_to_coords.begin(); it!=id1_to_coords.end(); ++it)
-			// std::cout << it->first << " => " << it->second.block << " => " << it->second.particle << '\n';
+			// std::cout << it->first << " => " << it->second.block << " => " << it->second.particle << " coords: " 
+				// << it->second.x << " " << it->second.y << " " << it->second.z << " " << '\n';
 				
 		std::map<int, point_for_crossover> id2_to_coords;
 		for (int i = 0; i < ind2->nx*ind2->ny*ind2->nz; i++)
@@ -343,10 +389,13 @@ container** crossover_by_mapping(container** con, double** size_dist)
 					
 			}
 			else {
-				printf("FAIL - point_id: %i, partic_per_block: %i, block: %i, partic_index: %i, xyz: %f %f %f\n", points[checked_particles], ind1->co[id1_to_coords[points[checked_particles]].block], 
+				printf("FAIL FOR individual %i - point_id: %i, partic_per_block: %i, block: %i, partic_index: %i, xyz: %f %f %f\n", index1, points[checked_particles], ind1->co[id1_to_coords[points[checked_particles]].block], 
 					id1_to_coords[points[checked_particles]].block, id1_to_coords[points[checked_particles]].particle,
 					id1_to_coords[points[checked_particles]].x, id1_to_coords[points[checked_particles]].y,
 					id1_to_coords[points[checked_particles]].z);
+				
+				get_ind_points(ind1, true);
+				exit(0);
 				break;
 			}
 		}
@@ -359,24 +408,65 @@ container** crossover_by_mapping(container** con, double** size_dist)
 		offspring2 = new container(x_min,x_max,y_min,y_max,z_min,z_max,6,6,6,true,true,true,8);
 		// std::cout << "cross5.2" << "\n";
 		
+		std::map<double, std::map<double, double> > points_map1;
+		std::map<double, std::map<double, double> > points_map2;
+		// std::cout << "before copy of points\n";
 		for (std::map<int, point_for_crossover>::iterator it=id1_to_coords.begin(); it!=id1_to_coords.end(); ++it){
 				
 			//here might be problems because of =
+			double x = it->second.x, y = it->second.y, z = it->second.z; 
+			double x2 = id2_to_coords[id_to_id[it->first]].x, y2 = id2_to_coords[id_to_id[it->first]].y, z2 = id2_to_coords[id_to_id[it->first]].z; 
 			if (it->second.is_interchanged)
 			{
-				// std::cout << "new point1-1 " << it->second.x << " " << it->second.y << " " << it->second.z << "\n";
-				// std::cout << "new point1-2 " << id2_to_coords[id_to_id[j]].x << " " << id2_to_coords[id_to_id[j]].y << " " << id2_to_coords[id_to_id[j]].z << "\n";
-				offspring1->put(it->first, it->second.x, it->second.y, it->second.z);
-				offspring2->put(it->first, id2_to_coords[id_to_id[it->first]].x, id2_to_coords[id_to_id[it->first]].y, 
-					id2_to_coords[id_to_id[it->first]].z);
+				// std::cout << "new point1-1 " << x << " " << y << " " << z << " points map: " << points_map1[x][y] << "\n";
+				// std::cout << "new point1-2 " << x2 << " " << y2 << " " << z2 << "\n";
+				if (points_map1[x][y] != z)
+				{
+					points_map1[x][y] = z;
+					offspring1->put(it->first, x, y, z);
+				} else {
+					double shifted_x = mutate(x, x_min, x_max);
+					points_map1[shifted_x][y] = z;
+					offspring1->put(it->first + 10000, shifted_x, y, z);
+				}
+				
+				if (points_map2[x2][y2] != z2)
+				{
+					points_map2[x2][y2] = z2;
+					offspring2->put(it->first, x2, y2, z2);
+				} else {
+					double shifted_x = mutate(x2, x_min, x_max);
+					points_map2[shifted_x][y2] = z2;
+					offspring2->put(it->first, shifted_x, y2, z2);
+				}
+				
 			}
 			else {
-				// std::cout << "new point2-1 " << id2_to_coords[id_to_id[j]].x << " " << id2_to_coords[id_to_id[j]].y << " " 
-					// << id2_to_coords[id_to_id[j]].z << "\n";
-				// std::cout << "new point2-2 " << it->second.x << " " << it->second.y << " " << it->second.z << "\n";
-				offspring2->put(it->first, it->second.x, it->second.y, it->second.z);
-				offspring1->put(it->first, id2_to_coords[id_to_id[it->first]].x, id2_to_coords[id_to_id[it->first]].y, 
-					id2_to_coords[id_to_id[it->first]].z);
+				// std::cout << "new point2-2 " << x << " " << y << " " << z << "\n";
+				// std::cout << "new point2-1 " << x2 << " " << y2 << " " << z2 << " points map: " << points_map1[x2][y2] << "\n";
+				if (points_map1[x2][y2] != z2)
+				{
+					// std::cout << "NON mutated x " << x2 << "\n";
+					points_map1[x2][y2] = z2;
+					offspring1->put(it->first, x2, y2, z2);
+				} else {
+					double shifted_x = mutate(x2, x_min, x_max);
+					// std::cout << "mutated x " << shifted_x << "\n";
+					points_map1[shifted_x][y2] = z2;
+					offspring1->put(it->first + 10000, shifted_x, y2, z2);
+				}
+				
+				if (points_map2[x][y] != z)
+				{
+					points_map2[x][y] = z;
+					offspring2->put(it->first, x, y, z);
+				} else {
+					double shifted_x = mutate(x, x_min, x_max);
+					points_map2[shifted_x][y] = z;
+					offspring2->put(it->first, shifted_x, y, z);
+				}
+				// offspring2->put(it->first, x, y, z);
+				// offspring1->put(it->first, x2, y2, z2);
 			}
 		}
 		// std::cout << "cross6 - " << offspring_amount << "\n";
@@ -414,7 +504,7 @@ double** compute_cell_sizes(container** con)
 		c_loop_all cl(*(con[i]));
 		int loop_counter = 0;
 		if(cl.start()) do if(con[i]->compute_cell(c,cl)) {
-			// printf("computed cell %i\n", con[i]->compute_cell(c,cl));
+			// printf("computed individual %i\n", i);
 			cl.pos(x,y,z);
 			id=cl.pid();
 		
@@ -440,8 +530,9 @@ double** compute_cell_sizes(container** con)
 					if (dist > max) max = dist;
 				}
 			}
-			
+			// std::cout << "real size before\n";
 			real_sizes[i][loop_counter++] = max;
+			// std::cout << "real size after\n";
 		} while (cl.inc());
 	}
 	
@@ -459,6 +550,7 @@ void output_data(std::string filename, double* size_dist)
 	
 	avg = avg / particles;
 	
+	//normalization factor
 	double coef = 1 / penalty_step / particles;
 	for (int i = 0; i < penalty_steps; i++)
 	{
@@ -481,6 +573,24 @@ void output_data(std::string filename, double* size_dist)
 }
 
 int main() {
+	std::stringstream ss;
+	
+	std::time_t t = std::time(0);
+	std::tm* now = std::localtime(&t);
+    ss << now->tm_mday << "-" << (now->tm_mon + 1) << "-" << (now->tm_year + 1900) << "_" << (now->tm_hour) << "." << (now->tm_min);
+	
+	std::string filename = "results/" + ss.str();
+	system(("mkdir " + filename).c_str());
+	// exit(0);
+	// ofstream myfile;
+	// myfile.open (filename.c_str());
+	// myfile << "Size(A)  Probability_real    Probability_expected\n";
+	// for (std::map<double, double>::iterator it=current_distribution.begin(); it!=current_distribution.end(); ++it)
+	// {
+		// myfile << it->first << "  " << it->second << "  " << original_distribution(it->first) << "\n";
+	// }
+	// myfile.close();
+	
 	srand (time(NULL));
 	container **con;
 	con = new container*[population_size];
@@ -532,23 +642,29 @@ int main() {
 		}
 		
 		if (iterations == 0){
-			output_data("dist_first.txt", real_sizes[min_penalty_index]);
-			
+			output_data((filename + "/dist_first.txt").c_str(), real_sizes[min_penalty_index]);
+			std::cout << (filename + "/dist_first.txt\n");
 			// return 0;
 		}
+		// exit(0);
 		std::cout << "penalty " << min_penalty << " ===========================================\n";
 		// printf("penalty %f  -- max pen %f\n", min_penalty, max_allowed_penalty);
-		if (min_penalty < max_allowed_penalty) break;
-		
+		if (min_penalty < max_allowed_penalty) {
+			// std::cout << "end of iter " << "\n";
+			output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
+	
+			break;
+		}
 		iterations++;
 		std::cout << "iter " << iterations << "\n";
 		
 		if (iterations > max_iterations) {
 			// std::cout << "end of iter " << "\n";
-			output_data("dist_end.txt", real_sizes[min_penalty_index]);
+			output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
 	
 			break;
 		}
+		else output_data((filename + "/dist_tmp.txt").c_str(), real_sizes[min_penalty_index]);
 		
 		
 		std::cout << "crossover\n";
@@ -557,7 +673,9 @@ int main() {
 		std::cout << "mutation\n";
 		mutation(&con);
 		
+		// std::cout << "recompute\n";
 		real_sizes = compute_cell_sizes(con);
+		// std::cout << "recompute completed\n";
 		
 		// for (int i = 0; i < con[0]->nx*con[0]->ny*con[0]->nz; i++)
 			// for (int j = 0; j < con[0]->co[i]; j++)
