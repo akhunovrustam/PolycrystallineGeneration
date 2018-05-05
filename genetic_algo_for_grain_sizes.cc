@@ -8,7 +8,14 @@
 #include "ExtraStructAndFunc.hh"
 #include "GeneticAlgoForSizesClass.cc"
 
-int main() {
+int main(int argc, char *argv[]) {
+	string prefix = "";
+	if (argc > 1)
+		prefix = argv[1] + prefix + "_exp";
+	
+	// cout << "prefix: " << prefix << "\n";
+	// exit(0);
+	
 	std::stringstream ss;
 	
 	//create folder to save output data
@@ -16,11 +23,11 @@ int main() {
 	std::tm* now = std::localtime(&t);
     ss << now->tm_mday << "-" << (now->tm_mon + 1) << "-" << (now->tm_year + 1900) << "_" << (now->tm_hour) << "." << (now->tm_min);
 	
-	std::string filename = "results/" + ss.str();
+	std::string filename = "results/" + prefix + ss.str();
 	system(("mkdir " + filename).c_str());
 	
 	//initial variables etc
-	srand (time(NULL));
+	srand (time(NULL) * atoi(argv[1]));
 	container **con;
 	container **offspring;
 	std::map<double, container*> common_pool;
@@ -47,6 +54,7 @@ int main() {
 	}
 	real_sizes = algo->compute_cell_sizes(con);
 
+	int penalties = 0;
 	//iterate until reach max iterations or precision
 	while (true){
 		int min_penalty_index = -1;
@@ -65,6 +73,9 @@ int main() {
 				min_penalty_index = i;
 			}
 		}
+		
+		penalties += population_size;
+		algo->write_penalty_step(filename + "/penalty_steps.txt", penalties, min_penalty);
 		
 		if (iterations == 0){
 			algo->output_data((filename + "/dist_first.txt").c_str(), real_sizes[min_penalty_index]);

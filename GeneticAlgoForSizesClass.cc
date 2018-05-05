@@ -512,3 +512,12 @@ void GeneticAlgoForSizesClass::output_data(std::string filename, double* size_di
 	}
 	myfile.close();
 }
+
+void GeneticAlgoForSizesClass::write_penalty_step(std::string filename, int penalties, double penalty)
+{	
+	ofstream myfile;
+	myfile.open (filename.c_str(), ofstream::out | ofstream::app);
+	// myfile << "Size(A)  Probability_real    Probability_expected\n";
+	myfile << penalties << "  " << penalty << "\n";
+	myfile.close();
+}

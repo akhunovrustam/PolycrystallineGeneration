@@ -4,7 +4,7 @@
 #define half_boxside 0.5
 #define penalty_steps 1000
 #define penalty_step 0.025
-#define max_iterations 1000
+#define max_iterations 3000
 #define max_allowed_penalty 0.0001
 #define surviving_size 4
 #define population_size 32
@@ -16,9 +16,12 @@
 class GeneticAlgoForSizesClass
 {
 public:
-	static constexpr double x_min=-half_boxside,x_max=half_boxside;
-	static constexpr double y_min=-half_boxside,y_max=half_boxside;
-	static constexpr double z_min=-half_boxside,z_max=half_boxside;
+	static constexpr double x_min=-half_boxside;
+	static constexpr double x_max=half_boxside;
+	static constexpr double y_min=-half_boxside;
+	static constexpr double y_max=half_boxside;
+	static constexpr double z_min=-half_boxside;
+	static constexpr double z_max=half_boxside;
 	
 	static double original_distribution(double point);
 	double mutate_dist(double mutation_max_applitude_e, int dist_num = 0);
@@ -37,6 +40,7 @@ public:
 	double normal_dist(double x);
 	double** compute_cell_sizes(container** con);
 	void output_data(std::string filename, double* size_dist);
+	void write_penalty_step(std::string filename, int penalties, double penalty);
 	
 };
 
