@@ -1,5 +1,11 @@
 #include "GeneticAlgoForSizesClass.hh"
 #include <random>
+#include <thread> 
+#include <chrono>
+
+using namespace std::this_thread; // sleep_for, sleep_until
+using namespace std::chrono; // nanoseconds, system_clock, seconds
+
 
 double GeneticAlgoForSizesClass::original_distribution(double point)
 {
@@ -21,7 +27,7 @@ double GeneticAlgoForSizesClass::fitness_penalty(int points_number, double (*ori
 	return sum / points_number;
 }
 
-double GeneticAlgoForSizesClass::size_penalty(double* size_dist)
+double GeneticAlgoForSizesClass::size_penalty(double* size_dist, int iter, int offspring_amount)
 {
 	std::map<double, double> current_distribution;
 	double max = 0, min = 100;
@@ -46,6 +52,7 @@ double GeneticAlgoForSizesClass::size_penalty(double* size_dist)
 	}
 	
 	double ret = fitness_penalty(penalty_steps, this->original_distribution, current_distribution);
+	current_distribution.clear();
 	// std:cout << "penalty " << ret << "\n";
 	return ret;
 }
@@ -143,20 +150,21 @@ void GeneticAlgoForSizesClass::mutation(container ***con1, bool reinit_flag)
 			for(int j = 0; j < particles; j++) {
 				con_subst->put(j,new_points[j][0],new_points[j][1],new_points[j][2]);
 			}
+			delete con[i];
 			con[i] = con_subst;
 		}
 	}
 }
 
-int GeneticAlgoForSizesClass::tournament_selection(double** size_dist, int selected)
+int GeneticAlgoForSizesClass::tournament_selection(double** size_dist, int iter, int offspring_amount, int selected)
 {
 	int index1 = rnd()*population_size;
 	int index2 = rnd()*population_size;
 	if (index1 == index2 && index2 == population_size - 1) index1--;
 	if (index1 == index2) index1++;
 	
-	double penalty1 = size_penalty(size_dist[index1]);
-	double penalty2 = size_penalty(size_dist[index2]);
+	double penalty1 = size_penalty(size_dist[index1], iter, offspring_amount);
+	double penalty2 = size_penalty(size_dist[index2], iter, offspring_amount);
 	
 	if ((penalty1 < penalty2 && selected == -1) || (selected != -1 && selected == index2)){
 		return index1; 
@@ -225,7 +233,7 @@ std::map<int, int> GeneticAlgoForSizesClass::ind_to_ind(container* ind1, contain
 				id_to_id[ind1->id[i][j]] = it->second;
 				break;
 			}
-			
+			id_to_dist.clear();
 		}
 	return id_to_id;
 }
@@ -290,6 +298,8 @@ void GeneticAlgoForSizesClass::select_interchange_regions(container* ind1, std::
 			break;
 		}
 	}
+	
+	delete [] points;
 }
 
 void GeneticAlgoForSizesClass::select_interchange_randomly(std::map<int, point_for_crossover> *id1_to_coords)
@@ -299,27 +309,33 @@ void GeneticAlgoForSizesClass::select_interchange_randomly(std::map<int, point_f
 			(*id1_to_coords)[it->first].is_interchanged = true;
 }
 
-container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, double** size_dist, int crossover_points)
+container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, double** size_dist, int iter, int crossover_points)
 {
+	
 	int offspring_amount = surviving_size;
 	voronoicell_neighbor c1;
 	container** offspring_containers = new container*[population_size + 1];
 	
 	std::map<double, int> penalty_rating;
 	for (int i = 0; i < population_size; i++)
-		penalty_rating[size_penalty(size_dist[i])] = i;
+		penalty_rating[size_penalty(size_dist[i], 0, 0)] = i;
+	
 	
 	int survived = 0;
 	for (std::map<double, int>::iterator it=penalty_rating.begin(); it!=penalty_rating.end(); ++it)
 		if (survived < surviving_size)
 			offspring_containers[survived++] = con[it->second];
 	
+	penalty_rating.clear();
+	
 	while (offspring_amount < population_size)
 	{
+		
 		//tournament select of 2 individuals for a crossover
-		int index1 = tournament_selection(size_dist);
+		int index1 = tournament_selection(size_dist, iter, offspring_amount);
+		
 		container* ind1 = con[index1];
-		int index2 = tournament_selection(size_dist, index1);
+		int index2 = tournament_selection(size_dist, iter, offspring_amount, index1);
 		container* ind2 = con[index2];
 		
 		//making mapping ID => xyz_bool where bool is if point goes to ind1 or not
@@ -409,11 +425,17 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 				// offspring1->put(it->first, x2, y2, z2);
 			}
 		}
+		
 		// std::cout << "cross6 - " << offspring_amount << "\n";
 		
 		offspring_containers[offspring_amount++] = offspring1;
 		offspring_containers[offspring_amount++] = offspring2;
 		// std::cout << "cross7 - " << offspring_amount << "\n";
+		points_map1.clear();
+		points_map2.clear();
+		id1_to_coords.clear();
+		id2_to_coords.clear();
+		id_to_id.clear();
 	}
 	
 	// std::cout << "cross end - " << offspring_amount << "\n";

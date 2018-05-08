@@ -13,7 +13,6 @@ Bibliography:
 4. S. Suwas and R. K. Ray, Crystallographic Texture of Materials, Springer-Verlag London 2014
 
 Questions:
-4. Run 100 processes in row for 3000 steps 
 
 1. Find out the reason of bug on genetic algo for orientations (penalty 3.8147)
 

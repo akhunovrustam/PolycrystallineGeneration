@@ -7,7 +7,12 @@
 #include "voro++.hh"
 #include "ExtraStructAndFunc.hh"
 #include "GeneticAlgoForSizesClass.cc"
+#include <thread> 
+#include <chrono>
 
+using namespace std::this_thread; // sleep_for, sleep_until
+using namespace std::chrono; // nanoseconds, system_clock, seconds
+	
 int main(int argc, char *argv[]) {
 	string prefix = "";
 	if (argc > 1)
@@ -31,14 +36,14 @@ int main(int argc, char *argv[]) {
 	container **con;
 	container **offspring;
 	std::map<double, container*> common_pool;
-	con = new container*[population_size];
+	con = new container*[population_size]; // created con
 	double x, y, z;
 	double **real_sizes;
 	double penalty[population_size];
 	double min_penalty = 100;
 	int iterations = 0;
 	
-	GeneticAlgoForSizesClass *algo = new GeneticAlgoForSizesClass();
+	GeneticAlgoForSizesClass *algo = new GeneticAlgoForSizesClass(); // created algo
 	
 	//initial population
 	for (int i = 0; i < population_size; i++){
@@ -52,16 +57,17 @@ int main(int argc, char *argv[]) {
 		}
 		
 	}
-	real_sizes = algo->compute_cell_sizes(con);
+	real_sizes = algo->compute_cell_sizes(con); // created real_sizes
 
 	int penalties = 0;
 	//iterate until reach max iterations or precision
 	while (true){
+		
 		int min_penalty_index = -1;
 		min_penalty = 100;
 		for (int i = 0; i < population_size; i++){
-			penalty[i] = algo->size_penalty(real_sizes[i]);
-			common_pool[penalty[i]] = con[i];
+			penalty[i] = algo->size_penalty(real_sizes[i], 0, 0);
+			common_pool[penalty[i] - rnd() * 0.0001] = con[i];
 			if (penalty[i] == 0.0)
 			{
 				for (int m = 0; m < particles; m++)
@@ -99,26 +105,63 @@ int main(int argc, char *argv[]) {
 		}
 		else algo->output_data((filename + "/dist_tmp.txt").c_str(), real_sizes[min_penalty_index]);
 		
-		
 		std::cout << "crossover\n";
+		
 		// con = crossover_by_mapping(con, real_sizes, -1);
-		offspring = algo->crossover_by_mapping(con, real_sizes, 2);
+		offspring = algo->crossover_by_mapping(con, real_sizes, iterations, 2);
 		// con = crossover_by_mapping(con, real_sizes);
 		
 		std::cout << "mutation\n";
 		algo->mutation(&offspring);
 		
-		double **real_sizes_offspring = algo->compute_cell_sizes(offspring);
+		double **real_sizes_offspring = algo->compute_cell_sizes(offspring); // created real_sizes_offspring
 
+		
 		//common pool
 		for (int i = 0; i < population_size; i++)
-			common_pool[algo->size_penalty(real_sizes_offspring[i])] = offspring[i];
+			common_pool[algo->size_penalty(real_sizes_offspring[i], 0, 0) - rnd() * 0.0001] = offspring[i];
 		
+		cout << common_pool.size();
+		// exit(0);
 		int selected_offspring = 0;
 		for (std::map<double, container*>::iterator it = common_pool.begin(); 
-			it != common_pool.end() && selected_offspring < population_size; it++, selected_offspring++)
-			con[selected_offspring] = it->second;
+			it != common_pool.end(); it++, selected_offspring++)
+			if (selected_offspring < population_size)
+				con[selected_offspring] = it->second;
+			else {
+				// cout << "delete " << selected_offspring << " \n";
+				delete it->second;
+				// it->second = nullptr;
+				// cout << "delete end \n";
+			}
+			
+		
+		
+		// cout << "offdelete 1 \n";
+		// for (int i = 0; i < population_size; i++)
+		// {
+			// cout << "offdelete 100 \n";
+			// if (offspring[i] != nullptr)
+				// delete offspring[i];
+			// offspring[i] = nullptr;
+		// }
+			// cout << "offdelete 2 \n";
+		// for (int i = 0; i < population_size; i++)
+			// delete offspring[i];
+		delete [] offspring;
+		
+		common_pool.clear();
+		for (int i = 0; i < population_size; i++)
+			delete [] real_sizes[i];
+		delete [] real_sizes; // deleted real_sizes
+		
+		for (int i = 0; i < population_size; i++)
+			delete [] real_sizes_offspring[i];
+		delete [] real_sizes_offspring; // deleted real_sizes_offspring
 		
 		real_sizes = algo->compute_cell_sizes(con);
 	}
+	
+	delete [] con; // deleted con
+	delete algo; // deleted algo
 }
