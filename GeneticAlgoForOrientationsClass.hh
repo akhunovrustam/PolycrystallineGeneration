@@ -2,13 +2,13 @@
 #define LatGen
 
 #define half_boxside 0.5
-#define penalty_steps 20
+#define penalty_steps 10
 #define penalty_step 0.08
-#define max_iterations 1000
+#define max_iterations 4
 #define max_allowed_penalty 0.0001
 #define surviving_size 0
-#define population_size 2
-#define particles 1000
+#define population_size 32
+#define particles 2000
 #define mutation_probability 0.10
 #define mutation_max_applitude 0.05
 #define crossover_probability 0.05
@@ -28,8 +28,9 @@ public:
 	
 	static double original_distribution(string point);
 	double mutate_dist(double mutation_max_applitude_e, int dist_num = 0);
-	double fitness_penalty(int points_number, double (*original_distribution)(string), map<string, double> current_distribution);
-	double size_penalty(orient_unit parent_rel);
+	double fitness_penalty(int points_number, double (*original_distribution)(string), 
+		map<string, double> current_distribution, string output = "");
+	double size_penalty(orient_unit parent_rel, string output = "");
 	euler_angles mutate(euler_angles angles, double min, double max, bool adopted_shift = true);
 	double reinit(double min, double max);
 	double reinit_angles();

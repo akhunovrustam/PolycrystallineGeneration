@@ -7,6 +7,14 @@ using namespace std::this_thread; // sleep_for, sleep_until
 using namespace std::chrono; // nanoseconds, system_clock, seconds
 
 
+GeneticAlgoForSizesClass::GeneticAlgoForSizesClass(int pop_size)
+{
+	double mutation_max_applitude_e = pow(pow(half_boxside*2, 3)/particles, 1.0/3.0) / 2;
+	
+	population_size = pop_size;
+	distribution = normal_distribution<double>(mutation_max_applitude_e / 2, mutation_max_applitude_e / 6);
+}
+
 double GeneticAlgoForSizesClass::original_distribution(double point)
 {
 	double sigma = 0.35;
@@ -66,15 +74,15 @@ double GeneticAlgoForSizesClass::mutate_dist(double mutation_max_applitude_e, in
 
 		//normal dist
 		case 1:
-		std::default_random_engine generator;
-		std::normal_distribution<double> distribution(mutation_max_applitude_e / 2, mutation_max_applitude_e / 6);
-
+		
 		double number = distribution(generator);
+		// cout << "normal number " << number << "\n";
+		
 		return number;
 	}
 }
 
-double GeneticAlgoForSizesClass::mutate(double val, double min, double max, bool adopted_shift)
+double GeneticAlgoForSizesClass::mutate(double val, double min, double max, bool adopted_shift, int dist_num)
 {
 	double mutation_max_applitude_e = pow(pow(half_boxside*2, 3)/particles, 1.0/3.0) / 2;
 	
@@ -86,7 +94,7 @@ double GeneticAlgoForSizesClass::mutate(double val, double min, double max, bool
 			val = (max + min)/2;
 			break;
 		}
-		if (adopted_shift)val += mutate_dist(mutation_max_applitude_e);
+		if (adopted_shift)val += mutate_dist(mutation_max_applitude_e, dist_num);
 		else val += rnd()*mutation_max_applitude*(rnd() > 0.5 ? -1 : 1);
 	} while (val < min || val > max);
 
@@ -98,7 +106,7 @@ double GeneticAlgoForSizesClass::reinit(double min, double max)
 	return min+rnd()*(max-min);
 }
 
-void GeneticAlgoForSizesClass::mutation(container ***con1, bool reinit_flag)
+void GeneticAlgoForSizesClass::mutation(container ***con1, bool reinit_flag, double mutation_probability, int dist_num)
 {
 	container **con = *con1;
 	for (int i = surviving_size; i < population_size; i++){
@@ -124,9 +132,9 @@ void GeneticAlgoForSizesClass::mutation(container ***con1, bool reinit_flag)
 				if (rnd_index1 == rnd_index2){
 					point_changed = true;
 					if (reinit_flag == false){
-						new_points[new_points_cntr][0] = mutate(x, x_min, x_max);
-						new_points[new_points_cntr][1] = mutate(y, y_min, y_max);
-						new_points[new_points_cntr][2] = mutate(z, z_min, z_max);
+						new_points[new_points_cntr][0] = mutate(x, x_min, x_max, true, dist_num);
+						new_points[new_points_cntr][1] = mutate(y, y_min, y_max, true, dist_num);
+						new_points[new_points_cntr][2] = mutate(z, z_min, z_max, true, dist_num);
 					} else {
 						new_points[new_points_cntr][0] = reinit(x_min, x_max);
 						new_points[new_points_cntr][1] = reinit(y_min, y_max);
@@ -539,7 +547,8 @@ void GeneticAlgoForSizesClass::write_penalty_step(std::string filename, int pena
 {	
 	ofstream myfile;
 	myfile.open (filename.c_str(), ofstream::out | ofstream::app);
-	// myfile << "Size(A)  Probability_real    Probability_expected\n";
+	if (penalties == population_size)
+		myfile << "Step  Penalty\n";
 	myfile << penalties << "  " << penalty << "\n";
 	myfile.close();
 }

@@ -60,18 +60,40 @@ orient_unit* GeneticAlgoForOrientationsClass::relative_euler(container* con, ori
 }
 
 double GeneticAlgoForOrientationsClass::fitness_penalty(int points_number, double (*original_distribution)(string), 
-	map<string, double> current_distribution)
+	map<string, double> current_distribution, string output)
 {
 	double sum = 0;
-	for (map<string, double>::iterator it=current_distribution.begin(); it!=current_distribution.end(); ++it){
-		// cout << "original: " << it->first << " => " << (*original_distribution)(it->first) << "\n";
-		sum += pow((*original_distribution)(it->first) - it->second, 2);
+	ofstream myfile;
+	if (output != "")
+	{
+		myfile.open (output.c_str());
+		myfile << "x  y  z   error\n";
 	}
 	
+	for (map<string, double>::iterator it=current_distribution.begin(); it!=current_distribution.end(); ++it){
+		// cout << "original: " << it->first << " => " << (*original_distribution)(it->first) << "\n";
+		double dif = (*original_distribution)(it->first) - it->second;
+		sum += pow(dif, 2);
+		
+		istringstream f(it->first.c_str());
+		string s;
+		getline(f, s, '|');
+		double alpha = stod(s);
+		getline(f, s, '|');
+		double beta = stod(s);
+		getline(f, s, '|');
+		double gamma = stod(s);
+		
+		if (output != "")
+			myfile << alpha << "  " << beta << "  " << gamma << "  " << dif << "\n";
+	}
+	
+	if (output != "")
+		myfile.close();
 	return sum / points_number;
 }
 
-double GeneticAlgoForOrientationsClass::size_penalty(orient_unit parent_rel)
+double GeneticAlgoForOrientationsClass::size_penalty(orient_unit parent_rel, string output)
 {
 	map<string, double> current_distribution;
 	
@@ -107,7 +129,7 @@ double GeneticAlgoForOrientationsClass::size_penalty(orient_unit parent_rel)
 			// cout << it->first << " " << it->second << "\n";
 		
 	// exit(0);
-	double ret = fitness_penalty(pow(penalty_steps, 3), this->original_distribution, current_distribution);
+	double ret = fitness_penalty(pow(penalty_steps, 3), this->original_distribution, current_distribution, output);
 	// std:cout << "penalty " << ret << "\n";
 	return ret;
 }
@@ -350,6 +372,7 @@ void GeneticAlgoForOrientationsClass::select_interchange_regions(container* con,
 			break;
 		}
 	}
+	delete [] points;
 }
 
 void GeneticAlgoForOrientationsClass::select_interchange_randomly(map<int, point_for_crossover> *id1_to_coords)

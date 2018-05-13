@@ -73,9 +73,12 @@ int main() {
 			}
 		}
 		
+		
 		if (iterations == 0){
+			algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_first.txt");
 			// algo->output_data((filename + "/dist_first.txt").c_str(), real_sizes[min_penalty_index]);
 			cout << (filename + "/dist_first.txt\n");
+			// exit(0);
 		}
 
 		cout << "penalty " << min_penalty << " ===========================================\n";
@@ -90,9 +93,12 @@ int main() {
 		
 		if (iterations > max_iterations) {
 			// algo->output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
+			algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_end.txt");
 	
 			break;
 		}
+		else algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_tmp.txt");
+			
 		// else algo->output_data((filename + "/dist_tmp.txt").c_str(), real_sizes[min_penalty_index]);
 		
 		
@@ -113,9 +119,18 @@ int main() {
 		
 		int selected_offspring = 0;
 		for (map<double, orient_unit>::iterator it = common_pool.begin(); 
-			it != common_pool.end() && selected_offspring < population_size; it++, selected_offspring++)
-			parents[selected_offspring] = it->second;
+			it != common_pool.end(); it++, selected_offspring++)
+			if (selected_offspring < population_size)
+				parents[selected_offspring] = it->second;
+			else {}
 		
+		common_pool.clear();
+		delete [] offspring;
+		// delete [] parents;
+		delete [] offspring_rel;
+		delete [] parents_rel;
 		parents_rel = algo->relative_euler(con, parents);
 	}
+	delete con;
+	delete algo;
 }

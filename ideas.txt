@@ -5,18 +5,22 @@ individuals of the new offspring are made by tournament crossover (random select
 selection of individual with the highest fitness). after crossover we make mutation for some percent.
 
 
-
-Bibliography:
-1. Shen, Y. et al. Constructing three-dimensional (3D) nanocrystalline models of Li4SiO4 for numerical modeling and simulation. Sci. Rep. 5, 10698; doi: 10.1038/srep10698 (2015).
-2. S. N. Sivanandam , S. N. Deepa, Introduction to Genetic Algorithms, Springer Publishing Company, Incorporated, 2007
-3. Melanie Mitchell, An Introduction to Genetic Algorithms, MIT Press, Cambridge, MA, 1998
-4. S. Suwas and R. K. Ray, Crystallographic Texture of Materials, Springer-Verlag London 2014
-
 Questions:
 
-1. Find out the reason of bug on genetic algo for orientations (penalty 3.8147)
+crossover operator
+mutation distribution	
+mutation_probability
+population_size
+[cp: 1p, 2p, uniform]
+[md: uniform, normal, reinit]
+[mp: 0.8, 0.2, 0.05, 0.01]
+[ps: 10, 40, 100]
 
-2. Try to splot 4D data in gnuplot
+180 configs
+
+1. write script for make stat from the generated data
+
+2. for each config of params perform 50 runs to make statistics
 
 
 100. Choose multibody potential

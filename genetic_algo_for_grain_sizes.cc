@@ -12,14 +12,56 @@
 
 using namespace std::this_thread; // sleep_for, sleep_until
 using namespace std::chrono; // nanoseconds, system_clock, seconds
+struct config{
+	int co; 	//crossover operator
+	int md; 	//mutation distribution
+	double mp; 	//mutation probability
+	int ps; 	//population size
+};
+config parse_prefix(string prefix)
+{
+	istringstream f(prefix.c_str());
+    string s;
+	getline(f, s, '_');
+	string co = s;
+	getline(f, s, '_');
+	string md = s;
+	getline(f, s, '_');
+	string mp = s;
+	getline(f, s, '_');
+	string ps = s;
 	
+	config cfg;
+	if (co == "uniform") cfg.co = -1;
+	else if (co == "1p") cfg.co = 1;
+	else if (co == "2p") cfg.co = 2;
+	
+	if (md == "uniform") cfg.md = 0;
+	else if (md == "normal") cfg.md = 1;
+	else if (md == "reinit") cfg.md = 2;
+	
+	cfg.mp = stod(mp);
+	
+	cfg.ps = stoi(ps);
+	
+	return cfg;
+}
+
 int main(int argc, char *argv[]) {
-	string prefix = "";
-	if (argc > 1)
-		prefix = argv[1] + prefix + "_exp";
+	string prefix = "1p_uniform_0.8_10_exp";
+	if (argc == 3)
+	{
+		prefix = argv[2];
+		prefix += "_exp";
+	}
 	
 	// cout << "prefix: " << prefix << "\n";
 	// exit(0);
+	config cfg = parse_prefix(prefix);
+	int population_size = population_size_const;
+	if (false){
+		population_size = cfg.ps;
+	}
 	
 	std::stringstream ss;
 	
@@ -34,8 +76,10 @@ int main(int argc, char *argv[]) {
 	//initial variables etc
 	srand (time(NULL) * atoi(argv[1]));
 	container **con;
+	// cout << cfg.co << " " << cfg.md << " " << cfg.mp << " " << cfg.ps << "\n";
 	container **offspring;
 	std::map<double, container*> common_pool;
+	// exit(0);
 	con = new container*[population_size]; // created con
 	double x, y, z;
 	double **real_sizes;
@@ -43,7 +87,7 @@ int main(int argc, char *argv[]) {
 	double min_penalty = 100;
 	int iterations = 0;
 	
-	GeneticAlgoForSizesClass *algo = new GeneticAlgoForSizesClass(); // created algo
+	GeneticAlgoForSizesClass *algo = new GeneticAlgoForSizesClass(population_size); // created algo
 	
 	//initial population
 	for (int i = 0; i < population_size; i++){
@@ -64,9 +108,14 @@ int main(int argc, char *argv[]) {
 	while (true){
 		
 		int min_penalty_index = -1;
-		min_penalty = 100;
+		int max_penalty_index = -1;
+		min_penalty = 1000000;
+		double max_penalty = 0;
+		double avg_penalty = 0;
+		
 		for (int i = 0; i < population_size; i++){
 			penalty[i] = algo->size_penalty(real_sizes[i], 0, 0);
+			avg_penalty += penalty[i];
 			common_pool[penalty[i] - rnd() * 0.0001] = con[i];
 			if (penalty[i] == 0.0)
 			{
@@ -78,10 +127,18 @@ int main(int argc, char *argv[]) {
 				min_penalty = penalty[i];
 				min_penalty_index = i;
 			}
+			
+			if (max_penalty < penalty[i]) {
+				max_penalty = penalty[i];
+				max_penalty_index = i;
+			}
 		}
+		avg_penalty /= population_size;
 		
 		penalties += population_size;
-		algo->write_penalty_step(filename + "/penalty_steps.txt", penalties, min_penalty);
+		algo->write_penalty_step(filename + "/penalty_steps_best.txt", penalties, min_penalty);
+		algo->write_penalty_step(filename + "/penalty_steps_worst.txt", penalties, max_penalty);
+		algo->write_penalty_step(filename + "/penalty_steps_avg.txt", penalties, avg_penalty);
 		
 		if (iterations == 0){
 			algo->output_data((filename + "/dist_first.txt").c_str(), real_sizes[min_penalty_index]);
@@ -108,11 +165,12 @@ int main(int argc, char *argv[]) {
 		std::cout << "crossover\n";
 		
 		// con = crossover_by_mapping(con, real_sizes, -1);
-		offspring = algo->crossover_by_mapping(con, real_sizes, iterations, 2);
+		// offspring = con;
+		offspring = algo->crossover_by_mapping(con, real_sizes, iterations, cfg.co);
 		// con = crossover_by_mapping(con, real_sizes);
 		
 		std::cout << "mutation\n";
-		algo->mutation(&offspring);
+		algo->mutation(&offspring, cfg.md == 2 ? true : false, cfg.mp, cfg.md == 2 ? 0 : cfg.md);
 		
 		double **real_sizes_offspring = algo->compute_cell_sizes(offspring); // created real_sizes_offspring
 
