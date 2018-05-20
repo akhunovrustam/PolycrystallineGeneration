@@ -52,14 +52,15 @@ int main(int argc, char *argv[]) {
 	if (argc == 3)
 	{
 		prefix = argv[2];
+		prefix += "_SEED_";
+		prefix += argv[1];
 		prefix += "_exp";
 	}
 	
-	// cout << "prefix: " << prefix << "\n";
 	// exit(0);
 	config cfg = parse_prefix(prefix);
 	int population_size = population_size_const;
-	if (false){
+	if (prefix != ""){
 		population_size = cfg.ps;
 	}
 	
@@ -87,6 +88,7 @@ int main(int argc, char *argv[]) {
 	double min_penalty = 100;
 	int iterations = 0;
 	
+	cout << "prefix: " << prefix << "\n";
 	GeneticAlgoForSizesClass *algo = new GeneticAlgoForSizesClass(population_size); // created algo
 	
 	//initial population

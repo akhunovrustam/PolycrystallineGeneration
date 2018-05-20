@@ -27,9 +27,48 @@ There are numbers of experiments and theoretical research for the intrinsic stru
 
 We know few methods for generating digital nanostructured materials for use in the simulation: Poisson–Voronoi tessellation (PVT) \cite{wear86}, Monodispersive grain size (MGS) \cite{wang96}, Laguerre–Voronoi tessellation (LVT) \cite{fan04}, Johnson–Mehl (JM) model \cite{okabe00} etc. In this work we used Voronoi tesselation model for the reason of its good solution for the complex sctructural nanocrystals and also convinient interface for the genetic algorithm, that we used during our polycristalline generation. It is also generally accepted that many single-phase fully dense nanocrystals are described by a log-normal grain size distribution. And we took this distribution as a reference for polycristalline generation.
 
+The goal of this work is implementation of general methodology of generation realistic polycrystalline structure. It should correspond grain sizes and orienation distribution, have minimal energy and be relevant to experimental density, lattice constant etc. The methodology also should be fast enough in order to do generation in one or several days on adequate resources. This all we are trying to do using existing results for different polycrystallines.
+
 
 \section{Overview of existing methods and results}
 
+Before my research I did an overview of existing results in several related papers. One of the most important article for our research was "Constructing three-dimensional (3D) nanocrystalline models of $ Li_4SiO_4 $ for numerical modeling and simulation" \cite{shen15}.
+
+In this paper authors considers problem of generation $ Li_4SiO_4 $ polycrystalline that is  narrowing the result for particular matter. But we rather try to implement more general approach. Of course by making more general method we face much more problem with efficiency and time consuming of the generation method. But even general method can be fitted to the particular element.
+
+The authors use genetic algorithm to reach particular distribution of grain sizes and as we can see they use only mutation operator without crossover. But we in contrary use both mutation and crossover. Moreover we implemented 3 variants of crossover and 3 variants of mutation in order to find optimal operators for our task. We implemented numerous computing experiments and chose optimal combination of operators and other algorithm parameters.
+
+But it is necessary to pay tribute to the good results obtained during implementation of the algorithm. Authors were able to reach very good permormance. In particular the computation time per step was 3.7 s with 6 processors and it is much better compared to the result 3.9 s with 32 processors \cite{suzudo02}.
+
+Even the article mentioned above is a basis for my research I did more deep overview of the topic regarding methods available to generate realistic polycrystalline structure. And one of the intereseting paper dedicated to the problem is "Lattice models of polycrystalline microstructures: A quantitative approach" \cite{rinaldi08}.
+
+Here authors refer to available methods for creating polycrystalline structure. Among several different approaches they mention Voronoi tesselation as a good method for obtaining the polycrystalline structure. It is noticed that this method is very popular and wide spread in fitting to the experimental data and therefore presented in special commercial software such as AMIRA, MIMICS, SURFDRIVER.
+
+Of course Voronoi tesselation method has disadvantages like that it represents only convex polyhedra that is not true for real polycrystals. It is also known that real grains not necessary polyhedra at all. Nonetheless, Voronoi tesselation remains very quick and reliable method of generation structures close to the real polycrystalls. 
+
+In the paper it is also noticed that instead of focusing on precise microstructure much better focus on major statistics like  distribution of grain size and grain orientation. It is actually what I am doing in my work.
+
+However, in the paper the main goal is achieving the mechanically equivalent polycrystalline. Although this approach is good for mechanical properties of material it loses any other aspects of real matter. This is why we cannot apply current results in our research.
+
+Another significant result in realistic generation of polycrystalline structure was achieved in "Mechanical properties of polycrystalline graphene based on a realistic atomistic model" \cite{kotak12}.
+
+Here authors did great work in order to obtain realistic atomic structure of graphene. They implemented algorithm for atomic structure generation based on the growth principle. It means that after random location of grain centers they tried to simulate growth of grains by considering borders of growing grain step by step. They also followed misorientation distribution that have one to one correspondence with orientation distrubution. It is also emphasized the importance of realistic simulation of grain boundaries because of their significant impact on mechanical and electrical properties of material.
+
+The main disadvantages in the work that the result is valid only for graphene and graphene like structures. This limitation I will try to bypass in my work. There is also problem with algorithm used in paper. This approach needs more computing resources and have some difficulties in parallelising. Usually such structure construction need days for obtaining usable results if the system have usual for simulation sizes. The real distribution of grain sizes is absolutely neglected in the paper. It is considered only uniform distribution for the grains that does not follow real structures. But nonetheless, I borowed some ideas for misorientation distribution in my work.
+
+In following "Studying the elastic properties of nanocrystalline copper using a model of randomly packed uniform grains" \cite{guo13} paper I found interesting new approach in studying mechanincal properties of nanoscaled polycrystalline materials. Authors offer concentrate on finding dependency of elastic module on grain boundaries and therefore they make artificial ideal polycrystall where they obtain uniform grain sizes that is not true for realistic structures.
+
+Now from the papers about theoretical statements we move to the practical results that currently exist and can help to generate polycrystalline structure.
+
+Firstly, I would like to mention very useful modern software so called nanoSculpt \cite{prak16}. It allows to construct atomic structure inside any shape and forms. It also support constructing of Voronoi tessellation for polycrystalls in any shape. It was written using C language and easy extensible enough. But unfortunatelly, currently this package does not support following particular distribution of grain size and orientation during costruction of structure. 
+
+Another interesting tool is AtomEye \cite{juli03} developed by MIT staffs. It is very comprehensive and powerfull tool for dealing with atomic structure. One of the most interesting util for me in this package is so called voronoirize tool. It can be used for building polycrystalline structures. The software is written in C language. But again problem it does not follow user defined distributions of sizes and orientations. 
+
+And the last tool that I would like to mention is Atomsk \cite{hirel15}. According to the website title of the utils it is the Swiss-army knife of atomic simulations. It supports many and many methods for atomic simulation. You can obtain numereous output format for any simulation programs you need. But I faced the same problem as in mentioned above tools. To generate polycrystalline structure with particular distributions you need to define orientation and size for each grain by hand. It is not convinient in particular with big sized simulation boxes. Moreover this util is written in Fortran language that is not very convinient tool for wide support and extension. Particularly in industry field.
+
+As you can see there are many researchs and tool dedicated to the problem of generating of polycrystalline structures. But there are several problems that you can face while using them. Firstly they do not support generation based on user defined distribution that makes these tools very hard to use in realistic conditions. Secondly, tools and methods which support realistic structures work on very slow algorithm that needs days for obtaining trustful results. Thirdly, sometimes tools are written in "not good" languages and are hard to maintain.
+
+These all reasons inspired me to create useful tool for generating realistic polycrystalline structure written in C++ language and backed by LAMMPS simulation software.
 
 \section{Building the Voronoi tessellation}
 
@@ -88,16 +127,33 @@ The only trick that we need during this generation is following the periodic con
 
 \section{Relaxation of atomic structure}
 
+The relaxation process in this work backed by minimization of whole energy by shifting the center of lattice generation for each grain and by removing some atoms on grains borders. Calculating of whole energy performed by LAMMPS module. For calculating energy we use many body potential \[the name and formula for potential\].
+
+The process of generation center shifting is implemented again by using genetic algorithm. We generate randomly generation and for each individual calculate total energy. Crossover and mutation are implemented in similar way as it was for grain size genetic algorithm with the exception that we deal with center of generation and leave untouched the tessellation.
+
+After achieving optimal low energy we walk through border of each grain and try to remove redundunt atoms again in order to lower total energy.
+
+If we found that structure is stable we run simulation in LAMMPS with chosen potential to finish the process of relaxation and hence by the end we obtain realistic polycrystalline structure.
 
 \section{Results and discussion}
 
-
+- describe how we did genetic algo for different configurations for sizes and orientations and show the common graph for all configurations
+- discuss about why is it so. why it works with these parameters
+- describe more detailed and with graphs the filling processs and discuss the results
+- descibe in detail relaxation process and show progress of total energy reduction
 
 \section{Methods}
 
+- show block scheme of genetic algo for sizes and orientation
+- show block scheme for filling
+- show block scheme for relaxation
+ 
 \section{Additional Information}
 
+???
+
 \section{Conclusion}
+
 
 
 \begin{thebibliography}{9}
@@ -143,11 +199,49 @@ The only trick that we need during this generation is following the periodic con
   Sci. Rep. 5, 10698; doi: 10.1038/srep10698 
   2015
 
+\bibitem{suzudo02}
+  Suzudo T.  Kaburaki H. 
+  \textit{An evolutional approach to the numerical construction of polycrystalline structures using the Voronoi tessellation}
+  Phys. Lett. A 373, 4484–4488 (2009).
+
 \bibitem{wang96}
   Wang J. et al. 
   \textit{Computer simulation of the structure and thermo-elastic properties of a model nanocrystalline material}
   Philos. Mag. A. 73, 517–555 
   1996
+
+\bibitem{rinaldi08}
+  Antonio Rinaldi, Dusan Krajcinovic, Pedro Peralta, Ying-Cheng Lai
+  \textit{Lattice models of polycrystalline microstructures: A quantitative approach}
+  Mechanics of Materials 40 (2008) 17–36
+
+\bibitem{kotak12}
+  Jani Kotakoski and Jannik C. Meyer
+  \textit{Mechanical properties of polycrystalline graphene based on a realistic atomistic model}
+  Phys. Rev. B 85, 195447 – 24 May 2012
+
+\bibitem{guo13}
+  Guo-Jie J. Gao  Yun-Jiang Wang Shigenobu Ogata
+  \textit{Studying the elastic properties of nanocrystalline copper using a model of randomly packed uniform grains}
+ Computational Materials Science
+Volume 79, November 2013, Pages 56-62
+
+\bibitem{prak16}
+  A.Prakash M.Hummel S.Schmauder E.Bitzeka
+  \textit{Nanosculpt: A methodology for generating complex realistic configurations for atomistic simulations}
+ MethodsX
+Volume 3, 2016, Pages 219-230
+
+\bibitem{juli03}
+  Ju Li
+  \textit{AtomEye: an efficient atomistic configuration viewer}
+ Modelling Simul. Mater. Sci. Eng. 11 (2003) 173–177
+
+\bibitem{hirel15}
+  Pierre Hirel
+  \textit{Atomsk: A tool for manipulating and converting atomic data files}
+ Computer Physics Communications
+Volume 197, December 2015, Pages 212-219
 
 \bibitem{wear86}
   Weaire D. et al. 
