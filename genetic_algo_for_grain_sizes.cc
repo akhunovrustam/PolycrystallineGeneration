@@ -12,49 +12,19 @@
 
 using namespace std::this_thread; // sleep_for, sleep_until
 using namespace std::chrono; // nanoseconds, system_clock, seconds
-struct config{
-	int co; 	//crossover operator
-	int md; 	//mutation distribution
-	double mp; 	//mutation probability
-	int ps; 	//population size
-};
-config parse_prefix(string prefix)
-{
-	istringstream f(prefix.c_str());
-    string s;
-	getline(f, s, '_');
-	string co = s;
-	getline(f, s, '_');
-	string md = s;
-	getline(f, s, '_');
-	string mp = s;
-	getline(f, s, '_');
-	string ps = s;
-	
-	config cfg;
-	if (co == "uniform") cfg.co = -1;
-	else if (co == "1p") cfg.co = 1;
-	else if (co == "2p") cfg.co = 2;
-	
-	if (md == "uniform") cfg.md = 0;
-	else if (md == "normal") cfg.md = 1;
-	else if (md == "reinit") cfg.md = 2;
-	
-	cfg.mp = stod(mp);
-	
-	cfg.ps = stoi(ps);
-	
-	return cfg;
-}
 
 int main(int argc, char *argv[]) {
-	string prefix = "1p_uniform_0.8_10_exp";
+	string prefix = "2p_uniform_0.1_20";
 	if (argc == 3)
 	{
 		prefix = argv[2];
 		prefix += "_SEED_";
 		prefix += argv[1];
 		prefix += "_exp";
+	}
+	else if (argc == 2)
+	{
+		prefix = ((prefix + "_SEED_") + argv[1]) + "_exp";
 	}
 	
 	// exit(0);
@@ -71,7 +41,7 @@ int main(int argc, char *argv[]) {
 	std::tm* now = std::localtime(&t);
     ss << now->tm_mday << "-" << (now->tm_mon + 1) << "-" << (now->tm_year + 1900) << "_" << (now->tm_hour) << "." << (now->tm_min);
 	
-	std::string filename = "results/" + prefix + ss.str();
+	std::string filename = "results_size/" + prefix + ss.str();
 	system(("mkdir " + filename).c_str());
 	
 	//initial variables etc
@@ -108,6 +78,10 @@ int main(int argc, char *argv[]) {
 	int penalties = 0;
 	//iterate until reach max iterations or precision
 	while (true){
+		std::cout << "begin iter " << iterations << " ========================\n";
+		
+		if (iterations > 500) cfg.mp = 0.01;
+		if (iterations > 1000) cfg.mp = 0.001;
 		
 		int min_penalty_index = -1;
 		int max_penalty_index = -1;
@@ -142,27 +116,6 @@ int main(int argc, char *argv[]) {
 		algo->write_penalty_step(filename + "/penalty_steps_worst.txt", penalties, max_penalty);
 		algo->write_penalty_step(filename + "/penalty_steps_avg.txt", penalties, avg_penalty);
 		
-		if (iterations == 0){
-			algo->output_data((filename + "/dist_first.txt").c_str(), real_sizes[min_penalty_index]);
-			std::cout << (filename + "/dist_first.txt\n");
-		}
-
-		std::cout << "penalty " << min_penalty << " ===========================================\n";
-
-		if (min_penalty < max_allowed_penalty) {
-			algo->output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
-	
-			break;
-		}
-		iterations++;
-		std::cout << "iter " << iterations << "\n";
-		
-		if (iterations > max_iterations) {
-			algo->output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
-	
-			break;
-		}
-		else algo->output_data((filename + "/dist_tmp.txt").c_str(), real_sizes[min_penalty_index]);
 		
 		std::cout << "crossover\n";
 		
@@ -196,18 +149,30 @@ int main(int argc, char *argv[]) {
 			}
 			
 		
+		//write data into files
+		if (iterations == 0){
+			algo->output_data((filename + "/dist_first.txt").c_str(), real_sizes[min_penalty_index]);
+			std::cout << (filename + "/dist_first.txt\n");
+		}
+
+		std::cout << "penalty " << min_penalty << " ===========================================\n";
+
+		if (min_penalty < max_allowed_penalty) {
+			algo->output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
+	
+			break;
+		}
+		iterations++;
 		
-		// cout << "offdelete 1 \n";
-		// for (int i = 0; i < population_size; i++)
-		// {
-			// cout << "offdelete 100 \n";
-			// if (offspring[i] != nullptr)
-				// delete offspring[i];
-			// offspring[i] = nullptr;
-		// }
-			// cout << "offdelete 2 \n";
-		// for (int i = 0; i < population_size; i++)
-			// delete offspring[i];
+		if (iterations > max_iterations) {
+			algo->output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
+	
+			break;
+		}
+		else algo->output_data((filename + "/dist_tmp.txt").c_str(), real_sizes[min_penalty_index]);
+		
+		
+		//release all memory 
 		delete [] offspring;
 		
 		common_pool.clear();
@@ -219,6 +184,7 @@ int main(int argc, char *argv[]) {
 			delete [] real_sizes_offspring[i];
 		delete [] real_sizes_offspring; // deleted real_sizes_offspring
 		
+		//recompute sizes
 		real_sizes = algo->compute_cell_sizes(con);
 	}
 	

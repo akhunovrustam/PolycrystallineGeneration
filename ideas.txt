@@ -6,6 +6,8 @@ selection of individual with the highest fitness). after crossover we make mutat
 
 
 Questions:
+- talk about graphics for sizes algo configurations
+- talk about Laguerre tessellation
 
 crossover operator
 mutation distribution	
@@ -17,5 +19,8 @@ population_size
 [ps: 10, 50, 100]
 
 108 configs
+
+ 
+2. form all necessary graphics for thesis
 
 100. Choose multibody potential

@@ -4,14 +4,15 @@ import matplotlib.pyplot as plt
 import math
 import numpy as np
 
-folder = 'results'
-cp = ['1p']
+folder = 'results_from_tryton'
+cp = ['2p']
 # cp = ['1p', '2p', 'uniform']
 # md = ['uniform', 'normal', 'reinit']
-md = ['uniform']
-# mp = ['0.8' '0.2' '0.05' '0.01']
-mp = ['0.8']
-ps = ['10', '50', '100']
+md = ['uniform'] #best for mutation distribution
+# mp = ['0.8', '0.2', '0.05', '0.01']
+mp = ['0.05']
+# ps = ['10', '50', '100']
+ps = ['50'] #does not depend
 
 delim = "_"
 
@@ -41,15 +42,15 @@ for i in cp:
 					dt = pd.read_csv(file + '\penalty_steps_avg.txt', delim_whitespace=True)
 					if min > len(dt.index): min = len(dt.index)
 					if common_frame.empty:
-						x = np.array(dt['Step'][0:int(min/32)])
+						x = np.array(dt['Step'][int(100/dt['Step'][0] - 1):min:int(5000/dt['Step'][0])])
 						y = x.astype(np.str)
 						common_frame = pd.DataFrame(columns=y);
 						print(file)
-						common_frame.loc[cnt] = np.array(dt['Penalty'][0:int(min/32)])
+						common_frame.loc[cnt] = np.array(dt['Penalty'][int(100/dt['Step'][0] - 1):min:int(5000/dt['Step'][0])])
 						cnt += 1;
 					else:
 						print(file)
-						common_frame.loc[cnt] = np.array(dt['Penalty'][0:int(min/32)])
+						common_frame.loc[cnt] = np.array(dt['Penalty'][int(100/dt['Step'][0] - 1):min:int(5000/dt['Step'][0])])
 						cnt += 1;
 						
 				result_frame = pd.DataFrame(columns=['Step', 'Avg Penalty', 'Std deviation'])

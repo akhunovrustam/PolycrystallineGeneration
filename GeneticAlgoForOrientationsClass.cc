@@ -7,6 +7,14 @@
 using namespace std;
 using namespace voro;
 
+GeneticAlgoForOrientationsClass::GeneticAlgoForOrientationsClass(int pop_size)
+{
+	double mutation_max_applitude_e = pow(pow(half_boxside*2, 3)/particles, 1.0/3.0) / 2;
+	
+	population_size = pop_size;
+	distribution = normal_distribution<double>(mutation_max_applitude_e / 2, mutation_max_applitude_e / 6);
+}
+
 double GeneticAlgoForOrientationsClass::original_distribution(string point)
 {
 	double k = 1 / pow(penalty_step, 3) / particles;
@@ -43,19 +51,25 @@ orient_unit* GeneticAlgoForOrientationsClass::relative_euler(container* con, ori
 		string signstr = sign.str();
 		for (vector<int>::iterator it = neigh.begin() ; it != neigh.end(); ++it)
 		{
+			stringstream sign_i0;
+			sign_i0 << id1_to_coords[*it].x << "|" << id1_to_coords[*it].y << "|" << id1_to_coords[*it].z;
 			stringstream sign_i;
-			sign_i << signstr << ":" << id1_to_coords[*it].x << "|" << id1_to_coords[*it].y << "|" << id1_to_coords[*it].z;
+			sign_i << signstr << ":" << sign_i0.str();
+			string signstr10 = sign_i0.str();
 			string signstr1 = sign_i.str();
 			for (int i = 0; i < population_size; i++)
 			{
 				// cout << i << " " << signstr1 << " bla\n";
-				output[i][signstr1] = {	abs_euler[i][signstr].alpha - abs_euler[i][signstr1].alpha, 
-											abs_euler[i][signstr].beta - abs_euler[i][signstr1].beta,
-											abs_euler[i][signstr].gamma - abs_euler[i][signstr1].gamma	};
+				output[i][signstr1] 
+					= {	abs(abs_euler[i][signstr].alpha - abs_euler[i][signstr10].alpha), 
+											abs(abs_euler[i][signstr].beta - abs_euler[i][signstr10].beta),
+											abs(abs_euler[i][signstr].gamma - abs_euler[i][signstr10].gamma)	};
+	
 			}
 		}
 	} while (cl.inc());
 	
+	cout << "size: " << output[0].size() << "\n";
 	return output;
 }
 
@@ -97,7 +111,7 @@ double GeneticAlgoForOrientationsClass::size_penalty(orient_unit parent_rel, str
 {
 	map<string, double> current_distribution;
 	
-	double k = 1 / pow(penalty_step, 3) / particles;
+	double koef = 1 / pow(penalty_step, 3) / particles;
 
 	for (int i = 0; i < penalty_steps; i++)
 		for (int j = 0; j < penalty_steps; j++)
@@ -108,28 +122,73 @@ double GeneticAlgoForOrientationsClass::size_penalty(orient_unit parent_rel, str
 					<< "|" << (k*penalty_step + penalty_step/2);
 				
 				string index_real = index.str();
-				current_distribution[index_real] = 0;
+				current_distribution[index_real] = -0.0000001;
 			}
+	
+	// cout << "size current dist: " << current_distribution.size() << "\n";
+	// cout << "check: " << current_distribution["0.075|0.675|0.225"] << "\n";
 	
 	for (orient_unit::iterator it = parent_rel.begin(); it != parent_rel.end(); it++){
 		// cout << it->second.alpha << " " << it->second.beta << " " << it->second.gamma << "\n";
-		int i = floor(it->second.alpha / penalty_step);
-		int j = floor(it->second.beta / penalty_step);
-		int k = floor(it->second.gamma / penalty_step);
+		int i = floor(it->second.alpha / (penalty_step));
+		int j = floor(it->second.beta / (penalty_step));
+		int k = floor(it->second.gamma / (penalty_step));
+		
+			// cout << "step: " << it->second.alpha << " " << penalty_step << " " << it->second.alpha / penalty_step << "\n";
+			// cout << "out of range angles: " << it->second.alpha << " " << it->second.beta << " " << it->second.gamma << "\n";
+			// cout << "out of range indexes: " << i << " " << j << " " << k << "\n";
+			// exit(0);
+		if (i == 10) i = 9;
+		if (j == 10) j = 9;
+		if (k == 10) k = 9;
+		// if (i < 0 || i > penalty_steps || j < 0 || j > penalty_steps || k < 0 || k > penalty_steps)
+		// {
+			// continue;
+		// }
+		
+		double alpha = i*penalty_step + penalty_step/2;
+		double beta = j*penalty_step + penalty_step/2;
+		double gamma = k*penalty_step + penalty_step/2;
 		
 		stringstream index;
-		index << (i*penalty_step + penalty_step/2) << "|" << (j*penalty_step + penalty_step/2) 
-				<< "|" << (k*penalty_step + penalty_step/2);
+		index << (alpha) << "|" << (beta) << "|" << (gamma);
 		string index_real = index.str();
-		current_distribution[index_real] = current_distribution[index_real] + k;
+		if (current_distribution[index_real] == 0)
+		{
+			cout << "double check: " << current_distribution[index_real] << "\n";
+			cout << "index: " << index_real << "\n";
+			cout << "out of range angles: " << it->second.alpha << " " << it->second.beta << " " << it->second.gamma << "\n";
+			cout << "out of range indexes: " << i << " " << j << " " << k << "\n";
+			exit(0);
+		}
+	
+		current_distribution[index_real] = current_distribution[index_real] + koef;
 	}
 	
+	// cout << "size current dist: " << current_distribution.size() << "\n";
+	// stringstream index;
+	// index << (penalty_step/2) << "|" << (penalty_step/2) << "|" << (penalty_step/2);
+	
+	// string index_real = index.str();
+	// string index_real = "0.825|0.975|1.425";
+	// cout << "cube: " << index_real << " - " << current_distribution[index_real] << "\n";
+	
+	// int amnt = 0;
 	// for (map<string, double>::iterator it = current_distribution.begin(); it != current_distribution.end(); it++)
 		// if (it->second != 0)
+			// amnt++;
 			// cout << it->first << " " << it->second << "\n";
-		
+	// cout << "how much not null: " << amnt << "\n"; 
+	
 	// exit(0);
 	double ret = fitness_penalty(pow(penalty_steps, 3), this->original_distribution, current_distribution, output);
+	if (ret > 1000)
+	{
+		for (map<string, double>::iterator it = current_distribution.begin(); it != current_distribution.end(); it++)
+			if (it->second != 0)
+				cout << it->first << " " << it->second << "\n";
+		exit(0);
+	}
 	// std:cout << "penalty " << ret << "\n";
 	return ret;
 }
@@ -139,7 +198,7 @@ double GeneticAlgoForOrientationsClass::mutate_dist(double mutation_max_applitud
 	switch(dist_num){
 		//uniform dist
 		case 0:
-		return rnd()*mutation_max_applitude_e*(rnd() > 0.5 ? -1 : 1);
+		return rnd()*mutation_max_applitude_e;
 
 		//normal dist
 		case 1:
@@ -151,9 +210,9 @@ double GeneticAlgoForOrientationsClass::mutate_dist(double mutation_max_applitud
 	}
 }
 
-euler_angles GeneticAlgoForOrientationsClass::mutate(euler_angles angles, double min, double max, bool adopted_shift)
+euler_angles GeneticAlgoForOrientationsClass::mutate(euler_angles angles, double min, double max, bool adopted_shift, int dist_num)
 {
-	double mutation_max_applitude_e = pow(pow(half_boxside*2, 3)/particles, 1.0/3.0) / 2;
+	double mutation_max_applitude_e = M_PI / 2 / 100;
 	
 	double val = angles.alpha;
 	int max_iter = 100;
@@ -164,8 +223,8 @@ euler_angles GeneticAlgoForOrientationsClass::mutate(euler_angles angles, double
 			val = (max + min)/2;
 			break;
 		}
-		if (adopted_shift)val += mutate_dist(mutation_max_applitude_e);
-		else val += rnd()*mutation_max_applitude*(rnd() > 0.5 ? -1 : 1);
+		if (adopted_shift)val += mutate_dist(mutation_max_applitude_e, dist_num);
+		else val += rnd()*mutation_max_applitude;
 	} while (val < min || val > max);
 	angles.alpha = val;
 	
@@ -210,7 +269,7 @@ double GeneticAlgoForOrientationsClass::reinit_angles()
 	return rnd() * M_PI / 2;
 }
 
-void GeneticAlgoForOrientationsClass::mutation(orient_unit **con1, bool reinit_flag)
+void GeneticAlgoForOrientationsClass::mutation(orient_unit **con1, bool reinit_flag, double mutation_probability, int dist_num)
 {
 	orient_unit *con = *con1;
 	for (int i = surviving_size; i < population_size; i++){
@@ -221,7 +280,7 @@ void GeneticAlgoForOrientationsClass::mutation(orient_unit **con1, bool reinit_f
 			double num = rnd();
 			if (num < mutation_probability){
 				if (reinit_flag == false){
-					ind1[it->first] = mutate(it->second, a_min, a_max);
+					ind1[it->first] = mutate(it->second, a_min, a_max, true, dist_num);
 				} else {
 					ind1[it->first] = {reinit_angles(), reinit_angles(), reinit_angles()};
 				}
@@ -382,7 +441,8 @@ void GeneticAlgoForOrientationsClass::select_interchange_randomly(map<int, point
 			(*id1_to_coords)[it->first].is_interchanged = true;
 }
 
-orient_unit* GeneticAlgoForOrientationsClass::crossover_by_mapping(container* con, orient_unit* parents, int crossover_points)
+orient_unit* GeneticAlgoForOrientationsClass::crossover_by_mapping(container* con, orient_unit* parents, orient_unit* parents_rel,
+	int crossover_points)
 {
 	int offspring_amount = surviving_size;
 	voronoicell_neighbor c1;
@@ -402,9 +462,9 @@ orient_unit* GeneticAlgoForOrientationsClass::crossover_by_mapping(container* co
 	{
 		cout << "off amount " << offspring_amount << "\n";
 		//tournament select of 2 individuals for a crossover
-		int indx = tournament_selection(parents);
+		int indx = tournament_selection(parents_rel);
 		orient_unit ind1 = parents[indx];
-		orient_unit ind2 = parents[tournament_selection(parents, indx)];
+		orient_unit ind2 = parents[tournament_selection(parents_rel, indx)];
 		
 		//making mapping ID => xyz_bool where bool is if point goes to ind1 or not
 		map<int, point_for_crossover> id1_to_coords = ind_points_map(con);
