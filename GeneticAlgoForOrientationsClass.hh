@@ -30,6 +30,7 @@ public:
 	normal_distribution<double> distribution;
 	
 	GeneticAlgoForOrientationsClass(int pop_size);
+	void write_penalty_step(string filename, int penalties, double penalty);
 	static double original_distribution(string point);
 	double mutate_dist(double mutation_max_applitude_e, int dist_num = 0);
 	double fitness_penalty(int points_number, double (*original_distribution)(string), 

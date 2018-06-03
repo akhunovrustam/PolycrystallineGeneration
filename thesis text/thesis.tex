@@ -4,7 +4,7 @@
 %\documentclass{acta}
 
 \usepackage{graphicx}
-
+\graphicspath{{./media/}}
 \begin{document}
 
 \title{Constructing three-dimensional (3D) polycrystalline models of FCC crystal for numerical modeling and simulation with multibody potential}
@@ -58,6 +58,9 @@ The main disadvantages in the work that the result is valid only for graphene an
 
 In following "Studying the elastic properties of nanocrystalline copper using a model of randomly packed uniform grains" \cite{guo13} paper I found interesting new approach in studying mechanincal properties of nanoscaled polycrystalline materials. Authors offer concentrate on finding dependency of elastic module on grain boundaries and therefore they make artificial ideal polycrystall where they obtain uniform grain sizes that is not true for realistic structures.
 
+The last very interesting paper to talk about that was considered during literature overview was "Generation of 3D polycrystalline microstructures with a conditioned Laguerre-Voronoi tessellation technique" \cite{falco13}.
+Here authors got really singnificant results in obtaining very close to real size distribution polycrystalline structure. In order to do this they used extended Voronoi tessellation method so called Laguerre-Voronoi tessellation. They implemented procedures that allows to associate particles weights with the grains sizes. This method helps to obtain very realistic distribution of grain sizes and use it in the following simulation that they actually did. During simulation using this kind of tessallation they compared simulation results with real experiments with annealed aluminum. Obtained results show high efficiency of this approach and can be used in our work too. Thank to developer of Voro++ library this tessellation is already implemented in the library and we can use Laguerre-Voronoi tesselation as first approximation in our genetic algorithm. It can significantly improve time of calculation.
+
 Now from the papers about theoretical statements we move to the practical results that currently exist and can help to generate polycrystalline structure.
 
 Firstly, I would like to mention very useful modern software so called nanoSculpt \cite{prak16}. It allows to construct atomic structure inside any shape and forms. It also support constructing of Voronoi tessellation for polycrystalls in any shape. It was written using C language and easy extensible enough. But unfortunatelly, currently this package does not support following particular distribution of grain size and orientation during costruction of structure. 
@@ -81,7 +84,16 @@ In our generation process we tested several distributions for grain size but onl
 As far as we have a set of 3D points in the space as a individual we are considering all operators acting on these points because we do not have any other objects to deal with.
 So, crossover operator just exchange points between two individuals according to the some rule defined in the implementation. And mutation operator just shifts the given points of individual according to the defined probability.
 
-For fitting grain size distribution we used genetic algorithm. In order to find best conditions of algorithm convergence we implemented several variants for crossover and mutation operator. Especially for crossover we have one-point, two-point and uniform crossover. First and second variants just straightforward classcial implementation of the operator. While uniform crossover is kind of nonstandard variant where point-to-point exchange rule follow random distribution. In other words, we take one point from first individual and randomly exchange with random point from the second individual. While in one- and two-point crossover we exchange points according to the virual distance between  them. Particularly, we exchange point if they are close to each other. You can see this mapping in figure \[reference to the figure\]
+For fitting grain size distribution we used genetic algorithm. In order to find best conditions of algorithm convergence we implemented several variants for crossover and mutation operator. Especially for crossover we have one-point, two-point and uniform crossover. First and second variants just straightforward classcial implementation of the operator. While uniform crossover is kind of nonstandard variant where point-to-point exchange rule follow random distribution. In other words, we take one point from first individual and randomly exchange with random point from the second individual. While in one- and two-point crossover we exchange points according to the virtual distance between  them. Particularly, we exchange point if they are close to each other. You can see this mapping on Figure \ref{mappingindividuals}.
+
+Here on the figure blue colored dots are points of first individual and red ones are of the second individual. We are making pairs of points from first and second individual according to the shortest distance between them. Green lines show which points we chose for pairing. As you can see in each case pairs are made between closest points.
+ 
+\begin{figure}
+    \centering
+    \includegraphics[width=3.0in]{individuals_map}
+    \caption{Mapping of two individuals' points}
+    \label{mappingindividuals}
+\end{figure}
 
 For the mutation operator we implemented variant with different distribution for point shifting value. Especially we implemented and tested two kind of distribution: uniform and normal. The maximum aplitude for the shifting is adopting to the system under consideration. We compute average volume for the one particle by dividing the whole simulation box by the amount of particles. After we take to cube root of this volume and obtain the adopted shifting maximum amplitute for the mutation operator.
 
@@ -97,11 +109,72 @@ For each particular configuration we run 48 instances due to our idea to find th
 
 For aggregation data from each configuration runs and finding mean value and standard deviation we used python pandas module.
 
-The result for best, worst and tree medium configurations are presented in the graphs below.
+The results for best, worst and average penalty for different configuration are presented on Figures \ref{crossovercomp1}, \ref{crossovercomp2}, \ref{crossovercomp3}, \ref{mutationprobcomp1}, \ref{mutationprobcomp2}, \ref{mutationprobcomp3}.
 
-\[figure with best config etc\]
 
-In these figures there are presented 3 lines: the best individual's penalty, the worst individual's penalty and the average penalty for the number of evaluating of penalty function.
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{crossover_comparison_md_uniform}
+    \caption{Comparison of crossover operators while mutation distribution is uniform}
+    \label{crossovercomp1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{crossover_comparison_md_normal}
+    \caption{Comparison of crossover operators while mutation distribution is normal}
+    \label{crossovercomp2}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{crossover_comparison_md_reinit}
+    \caption{Comparison of crossover operators while mutation is just reinitialization}
+    \label{crossovercomp3}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{mutation_probability_comparison_population_10}
+    \caption{Comparison of mutation probability while population size is 10 individuals}
+    \label{mutationprobcomp1}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{mutation_probability_comparison_population_50}
+    \caption{Comparison of mutation probability while population size is 50 individuals}
+    \label{mutationprobcomp2}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{mutation_probability_comparison_population_100}
+    \caption{Comparison of mutation probability while population size is 100 individuals}
+    \label{mutationprobcomp3}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{best_configuration}
+    \caption{The best configuration: 50 individuals, 0.01 mutation probability, two point crossover, uniform distribution for mutation}
+    \label{bestconfiguration}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{first_last_comparison}
+    \caption{The result of genetic algorithm work after 3000 steps}
+    \label{firstlastcomp}
+\end{figure}
+
+On these figures there are presented 3 lines: the best individual's penalty, the worst individual's penalty and the average penalty for the number of evaluating of penalty function.
+
+I permormed optimal configuration finding strategy in following manner. As we have 4 parameters for each configuration I divided this set to two subsets with two paremeters in each. Then in each subset I run calculations with different parameters from the set while parameters outside set were fixed. E.g. in \ref{crossovercomp1} we comparing crossover operators while mutation is uniform and population size and mutation probability are fixed. Similarly for \ref{crossovercomp1} with except of mutation operator. Here this operator has normal distribution, but all other parameters have the same set of values. 
+
+On the labeles above the graphs you can see titles of lines presented on the charts. Titles encode the configuration of the current line. For example "2p\textunderscore uniform\textunderscore 0.1\textunderscore 20 worst" means we have two-point crossover operator, uniform distribution for mutation, 0.1 mutation probability and 20 population size. Word "worst" means that all values presented for the worst individual in the current population. Besides "worst" we also have "best" and "avg". "Best" means values for the best individual and "avg" means average values for the generation.
+
+After permorming a lot of calculations we came to conclusion that "2p\textunderscore uniform\textunderscore 0.01\textunderscore 50" is the best configuration in terms of convergence.
 
 \subsection{Building the Voronoi tessellation fitting the given grain orientation distribution}
 
@@ -242,6 +315,13 @@ Volume 3, 2016, Pages 219-230
   \textit{Atomsk: A tool for manipulating and converting atomic data files}
  Computer Physics Communications
 Volume 197, December 2015, Pages 212-219
+
+\bibitem{falco15}
+  SimoneFalco JiaweiJian Francesco De Cola Nik Petrinic
+  \textit{Generation of 3D polycrystalline microstructures with a conditioned Laguerre-Voronoi tessellation technique}
+ Computational Materials Science
+Volume 136, August 2017, Pages 20-28
+
 
 \bibitem{wear86}
   Weaire D. et al. 

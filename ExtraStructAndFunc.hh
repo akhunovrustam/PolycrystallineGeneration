@@ -10,15 +10,19 @@
 #include <sstream>
 #include <ctime>
 #include <string>
+#include "Consts.hh"
 
 using namespace std;
 using namespace voro;
 
 struct config{
-	int co; 	//crossover operator
-	int md; 	//mutation distribution
-	double mp; 	//mutation probability
-	int ps; 	//population size
+	int co; 		//crossover operator
+	int md; 		//mutation distribution
+	double mp; 		//mutation probability
+	int ps; 		//population size
+	double mult; 	//multiplication for mutation amplitude
+	double from; 	//from how many particles make crossover
+	double to; 		//to how many particles make crossover
 };
 
 config parse_prefix(string prefix)
@@ -33,6 +37,12 @@ config parse_prefix(string prefix)
 	string mp = s;
 	getline(f, s, '_');
 	string ps = s;
+	getline(f, s, '_');
+	string mult = s;
+	getline(f, s, '_');
+	string from = s;
+	getline(f, s, '_');
+	string to = s;
 	
 	config cfg;
 	if (co == "uniform") cfg.co = -1;
@@ -47,7 +57,49 @@ config parse_prefix(string prefix)
 	
 	cfg.ps = stoi(ps);
 	
+	cfg.mult = stod(mult);
+	
+	cfg.from = stoi(from);
+	
+	cfg.to = stoi(to);
+	
 	return cfg;
+}
+
+void parse_args(int argc, char* argv[], string* prefix, config* cfg, int* population_size)
+{
+	if (argc == 3)
+	{
+		*prefix = argv[2];
+		*prefix += "_SEED_";
+		*prefix += to_string(atoi(argv[1]) * time(NULL));
+		*prefix += "_exp";
+	}
+	else if (argc == 2)
+	{
+		*prefix = ((*prefix + "_SEED_") + to_string(atoi(argv[1]) * time(NULL))) + "_exp";
+	}
+	
+	// exit(0);
+	*cfg = parse_prefix(*prefix);
+	*population_size = population_size_const;
+	if (*prefix != ""){
+		*population_size = (*cfg).ps;
+	}
+}
+
+void create_dir(string* filename, string prefix)
+{
+	stringstream ss;
+	
+	//create folder to save output data
+	time_t t = time(0);
+	tm* now = localtime(&t);
+    ss << now->tm_mday << "-" << (now->tm_mon + 1) << "-" << (now->tm_year + 1900) << "_" << (now->tm_hour) << "." << (now->tm_min);
+	
+	*filename = "results_size/" + prefix + ss.str();
+	system(("mkdir " + *filename).c_str());
+	
 }
 
 struct point_for_crossover {
@@ -65,5 +117,7 @@ struct euler_angles {
 	double gamma;
 };
 
+typedef map<int, vector<int>> neighbors;
+typedef map<double, map<double, map<double, int>>> sorted_points;
 typedef map<string, euler_angles> orient_unit;
 double rnd() {return double(rand())/RAND_MAX;}

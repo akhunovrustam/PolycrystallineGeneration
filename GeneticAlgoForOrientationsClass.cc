@@ -568,6 +568,15 @@ double** GeneticAlgoForOrientationsClass::compute_cell_sizes(container** con)
 	return real_sizes;
 }
 
+void GeneticAlgoForOrientationsClass::write_penalty_step(std::string filename, int penalties, double penalty)
+{	
+	ofstream myfile;
+	myfile.open (filename.c_str(), ofstream::out | ofstream::app);
+	if (penalties == population_size)
+		myfile << "Step  Penalty\n";
+	myfile << penalties << "  " << penalty << "\n";
+	myfile.close();
+}
 
 void GeneticAlgoForOrientationsClass::output_data(string filename, double* size_dist)
 {

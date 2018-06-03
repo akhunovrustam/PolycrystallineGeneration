@@ -75,14 +75,20 @@ int main(int argc, char *argv[]) {
 	}
 	// exit(0);
 		
+	int penalties = 0;
 	parents_rel = algo->relative_euler(con, parents);
 	//iterate until reach max iterations or precision
 	while (true){
 		cout << "begin ========================================\n";
 		int min_penalty_index = -1;
+		int max_penalty_index = -1;
 		min_penalty = 1000000;
+		double max_penalty = 0;
+		double avg_penalty = 0;
+		
 		for (int i = 0; i < population_size; i++){
 			penalty[i] = algo->size_penalty(parents_rel[i]);
+			avg_penalty += penalty[i];
 			cout << penalty[i] << "\n";
 			// exit(0);
 			common_pool[penalty[i]] = parents[i];
@@ -96,8 +102,18 @@ int main(int argc, char *argv[]) {
 				min_penalty = penalty[i];
 				min_penalty_index = i;
 			}
+			
+			if (max_penalty < penalty[i]) {
+				max_penalty = penalty[i];
+				max_penalty_index = i;
+			}
 		}
+		avg_penalty /= population_size;
 		
+		penalties += population_size;
+		algo->write_penalty_step(filename + "/penalty_steps_best.txt", penalties, min_penalty);
+		algo->write_penalty_step(filename + "/penalty_steps_worst.txt", penalties, max_penalty);
+		algo->write_penalty_step(filename + "/penalty_steps_avg.txt", penalties, avg_penalty);
 		
 		if (iterations == 0){
 			algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_first.txt");

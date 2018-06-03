@@ -2,6 +2,7 @@
 #include <random>
 #include <thread> 
 #include <chrono>
+#include <iterator>
 
 using namespace std::this_thread; // sleep_for, sleep_until
 using namespace std::chrono; // nanoseconds, system_clock, seconds
@@ -30,6 +31,7 @@ double GeneticAlgoForSizesClass::fitness_penalty(int points_number, double (*ori
 	for (std::map<double, double>::iterator it=current_distribution.begin(); it!=current_distribution.end(); ++it){
 		// std::cout << "original: " << it->first << " => " << (*original_distribution)(it->first) << "\n";
 		sum += pow((*original_distribution)(it->first) - it->second, 2);
+		// sum += abs((*original_distribution)(it->first) - it->second);
 	}
 	
 	return sum / points_number;
@@ -54,7 +56,7 @@ double GeneticAlgoForSizesClass::size_penalty(double* size_dist, int iter, int o
 		current_distribution[i*penalty_step + penalty_step/2] = 0;
 		for (int j = 0; j < particles; j++){
 			// std::cout << "size: " << size_dist[j] << " i: " << i*penalty_step << "\n";
-			if (size_dist[j] > i*penalty_step && size_dist[j] < (i+1)*penalty_step)
+			if ((size_dist[j] / avg) > i*penalty_step && (size_dist[j] / avg) < (i+1)*penalty_step)
 				current_distribution[i*penalty_step + penalty_step/2] = current_distribution[i*penalty_step + penalty_step/2] + k;
 		}
 	}
@@ -82,16 +84,16 @@ double GeneticAlgoForSizesClass::mutate_dist(double mutation_max_applitude_e, in
 	}
 }
 
-double GeneticAlgoForSizesClass::mutate(double val, double min, double max, bool adopted_shift, int dist_num)
+double GeneticAlgoForSizesClass::mutate(double val, double min, double max, bool adopted_shift, int dist_num, double mult)
 {
-	double mutation_max_applitude_e = pow(pow(half_boxside*2, 3)/particles, 1.0/3.0) / 2;
+	double mutation_max_applitude_e = 1*pow(pow(half_boxside*2, 3)/particles, 1.0/3.0) / 2;
 	
-	int max_iter = 100;
+	int max_iter = 10;
 	int iter = 0;
 	do {
 		iter++;
 		if (iter > max_iter) {
-			val = (max + min)/2;
+			val = reinit(min, max);
 			break;
 		}
 		if (adopted_shift)val += mutate_dist(mutation_max_applitude_e, dist_num);
@@ -106,57 +108,67 @@ double GeneticAlgoForSizesClass::reinit(double min, double max)
 	return min+rnd()*(max-min);
 }
 
-void GeneticAlgoForSizesClass::mutation(container ***con1, bool reinit_flag, double mutation_probability, int dist_num)
+void GeneticAlgoForSizesClass::mutation(container ***con1, int iteration, bool reinit_flag, double mutation_probability, 
+	int dist_num, sorted_points** exp, double mult)
 {
 	container **con = *con1;
+	sorted_points* experiment = *exp;
 	for (int i = surviving_size; i < population_size; i++){
 		double new_points[particles][3];
 		bool point_changed = false;
 		
-		container* ind1 = con[i];
+		sorted_points pt = experiment[i];
 		int new_points_cntr = 0;
-		for (int k = 0; k < ind1->nx*ind1->ny*ind1->nz; k++)
-		{
-			// printf("points per box - %i - %i\n", i, ind1->co[i]);
-			for (int j = 0; j < ind1->co[k]; j++)
-			{
-				double *pp=ind1->p[k]+3*j;
-				double x = *(pp++);
-				double y = *(pp++);
-				double z = *(pp++);
-				
-				int rnd_index1 = ceil(rnd()*ceil(sqrt(1/mutation_probability)));
-				int rnd_index2 = ceil(rnd()*ceil(sqrt(1/mutation_probability)));
-				
-				// std::cout << "rnd mutat " << (rnd_index1 == rnd_index2) << "\n";
-				if (rnd_index1 == rnd_index2){
-					point_changed = true;
-					if (reinit_flag == false){
-						new_points[new_points_cntr][0] = mutate(x, x_min, x_max, true, dist_num);
-						new_points[new_points_cntr][1] = mutate(y, y_min, y_max, true, dist_num);
-						new_points[new_points_cntr][2] = mutate(z, z_min, z_max, true, dist_num);
-					} else {
-						new_points[new_points_cntr][0] = reinit(x_min, x_max);
-						new_points[new_points_cntr][1] = reinit(y_min, y_max);
-						new_points[new_points_cntr][2] = reinit(z_min, z_max);
+		for (sorted_points::iterator it = pt.begin(); it != pt.end(); it++)
+			for (map<double, map<double, int>>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
+				for (map<double, int>::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++)
+				{
+					double x = it->first;
+					double y = it2->first;
+					double z = it3->first;
+					
+					double rnd_num = rnd();
+					
+					if (rnd_num < mutation_probability){
+						point_changed = true;
+						if (reinit_flag == false){
+							new_points[new_points_cntr][0] = mutate(x, x_min, x_max, true, dist_num, mult);
+							new_points[new_points_cntr][1] = mutate(y, y_min, y_max, true, dist_num, mult);
+							new_points[new_points_cntr][2] = mutate(z, z_min, z_max, true, dist_num, mult);
+							
+							if (iteration < 20)
+							{
+								double null_rnd = rnd();
+								if (null_rnd < 0.1)
+									if (new_points[new_points_cntr][0] != 0 && new_points[new_points_cntr][1] != 0 
+										&& new_points[new_points_cntr][2] != 0)
+										new_points[new_points_cntr][(int)floor(rnd()*3)] = 0;
+							}
+						
+						} else {
+							new_points[new_points_cntr][0] = reinit(x_min, x_max);
+							new_points[new_points_cntr][1] = reinit(y_min, y_max);
+							new_points[new_points_cntr][2] = reinit(z_min, z_max);
+						}
 					}
-				}
-				else {
-					new_points[new_points_cntr][0] = x;
-					new_points[new_points_cntr][1] = y;
-					new_points[new_points_cntr][2] = z;
-				}
-				new_points_cntr++;
+					else {
+						new_points[new_points_cntr][0] = x;
+						new_points[new_points_cntr][1] = y;
+						new_points[new_points_cntr][2] = z;
+					}
+					new_points_cntr++;
 				
-			}
-		}
+				}
+		
 		
 		if (point_changed){
 			container *con_subst;
 			con_subst = new container(x_min,x_max,y_min,y_max,z_min,z_max,6,6,6,true,true,true,8);
 			
+			experiment[i].clear();
 			for(int j = 0; j < particles; j++) {
 				con_subst->put(j,new_points[j][0],new_points[j][1],new_points[j][2]);
+				experiment[i][new_points[j][0]][new_points[j][1]][new_points[j][2]] = j;
 			}
 			delete con[i];
 			con[i] = con_subst;
@@ -164,15 +176,15 @@ void GeneticAlgoForSizesClass::mutation(container ***con1, bool reinit_flag, dou
 	}
 }
 
-int GeneticAlgoForSizesClass::tournament_selection(double** size_dist, int iter, int offspring_amount, int selected)
+int GeneticAlgoForSizesClass::tournament_selection(double* penalty, int iter, int offspring_amount, int selected)
 {
-	int index1 = rnd()*population_size;
-	int index2 = rnd()*population_size;
+	int index1 = floor(rnd()*population_size);
+	int index2 = floor(rnd()*population_size);
 	if (index1 == index2 && index2 == population_size - 1) index1--;
 	if (index1 == index2) index1++;
 	
-	double penalty1 = size_penalty(size_dist[index1], iter, offspring_amount);
-	double penalty2 = size_penalty(size_dist[index2], iter, offspring_amount);
+	double penalty1 = penalty[index1];
+	double penalty2 = penalty[index2];
 	
 	if ((penalty1 < penalty2 && selected == -1) || (selected != -1 && selected == index2)){
 		return index1; 
@@ -202,74 +214,136 @@ point_for_crossover* GeneticAlgoForSizesClass::get_ind_points(container* ind1, b
 		}
 }
 
-std::map<int, int> GeneticAlgoForSizesClass::ind_to_ind(container* ind1, container* ind2)
+std::map<int, int> GeneticAlgoForSizesClass::ind_to_ind(int ind1, int ind2, sorted_points** exp)
 {
-	std::map<int, int> id_to_id;
-	for (int i = 0; i < ind1->nx*ind1->ny*ind1->nz; i++)
-		for (int j = 0; j < ind1->co[i]; j++)
+	sorted_points* experiment = *exp;
+	// cout << "size ind to ind: " << experiment[ind1].size() << endl;
+	// cout << "size ind to ind: " << experiment[ind2].size() << endl;
+	int expcnt = 0;
+	double amp = 20 * pow(pow(half_boxside*2, 3)/particles, 1.0/3.0) / 2;
+	
+	// cout << "amp: " << amp << endl;
+	
+	map<int, int> pairs;
+	map<int, int> busy;
+	int c1 = 0, c2 = 0, c3 = 0;
+	for (map<double, map<double, map<double, int>>>::iterator it = experiment[ind1].begin(); it != experiment[ind1].end(); it++)
+	{
+		double x = it->first;
+		double xmin = x - amp;
+		double xmax = x + amp;
+		for (map<double, map<double, int>>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
 		{
-			double *pp=ind1->p[i]+3*j;
-			double x = *(pp++);
-			double y = *(pp++);
-			double z = *(pp++);
-			
-			std::map<double, int> id_to_dist;
-			for (int h = 0; h < ind2->nx*ind2->ny*ind2->nz; h++)
-				for (int k = 0; k < ind2->co[h]; k++)
-				{
-					double *pp1=ind2->p[h]+3*k;
-					double x1 = *(pp1++);
-					double y1 = *(pp1++);
-					double z1 = *(pp1++);
-					
-					double cur_dist = sqrt(pow(x-x1, 2) + pow(y-y1, 2) + pow(z-z1, 2));
-					id_to_dist[cur_dist] = ind2->id[h][k];
-				}
-			
-			for (std::map<double, int>::iterator it=id_to_dist.begin(); it!=id_to_dist.end(); ++it)
+			double y = it2->first;
+			double ymin = y - amp;
+			double ymax = y + amp;
+		
+			for (map<double, int>::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++)
 			{
-				bool dist_exist = false;
-				for (std::map<int, int>::iterator it2=id_to_id.begin(); it2!=id_to_id.end(); ++it2)
-					if (it2->second == it->second)
+				double z = it3->first;
+				double zmin = z - amp;
+				double zmax = z + amp;
+				int id1 = it3->second;
+				
+				double mindist = 10000;
+				int lastid;
+				for (map<double, map<double, map<double, int>>>::iterator itt = experiment[ind2].begin(); itt != experiment[ind2].end(); itt++)
+				{
+					double xt = itt->first;
+					// cout << xt << " " << xmax << " " << xmin << endl;
+					if (xt > xmax) break;
+					if (xt > xmin)
 					{
-						dist_exist = true;
-						break;
+						c1++;
+						for (map<double, map<double, int>>::iterator itt2 = itt->second.begin(); itt2 != itt->second.end(); itt2++)
+						{
+							double yt = itt2->first;
+							if (yt > ymax) break;
+							if (yt > ymin)
+							{
+								c2++;
+								for (map<double, int>::iterator itt3 = itt2->second.begin(); itt3 != itt2->second.end(); itt3++)
+								{
+									double zt = itt3->first;
+									int id2 = itt3->second;
+									// cout << "id2: " << id2 << " id1: " << id1 << " " << busy[id2] << endl;
+									if (pairs[busy[id2 + 12345]] == id2 + 12345) continue;
+									if (zt > zmax) break;
+									if (zt > zmin)
+									{
+										c3++;
+										expcnt++;
+										double dist = abs(x - xt) + abs(y - yt) + abs(z - zt);
+										if (mindist > dist)
+										{
+											mindist = dist;
+											lastid = id2;
+											pairs[id1] = lastid + 12345;
+											busy[lastid + 12345] = id1;
+											
+										}
+										
+										// cout << x << " " << y << " " << z << endl;
+									}
+								}
+							}
+						}
 					}
-				
-				if (dist_exist) continue;
-				
-				id_to_id[ind1->id[i][j]] = it->second;
-				break;
+				}
 			}
-			id_to_dist.clear();
 		}
-	return id_to_id;
+	}
+	
+	for (map<int, int>::iterator it = pairs.begin(); it != pairs.end(); it++)
+		pairs[it->first] = pairs[it->first] - 12345;
+	
+	map<int, int> bla;
+	for (map<int, int>::iterator it = pairs.begin(); it != pairs.end(); it++)
+		if (bla[it->second] > 1)
+		{
+			cout << it->first << " - " << it->second << endl;
+			exit(0);
+		}
+		else
+		{
+			bla[it->second]++;
+		}
+	
+	// cout << c1 << " " << c2 << " " << c3 << " " << pairs.size() << endl;
+	// exit(0);
+	return pairs;
 }
 
-std::map<int, point_for_crossover> GeneticAlgoForSizesClass::ind_points_map(container* ind)
+std::map<int, point_for_crossover> GeneticAlgoForSizesClass::ind_points_map(sorted_points sortp)
 {	
 	std::map<int, point_for_crossover> id2_to_coords;
-	for (int i = 0; i < ind->nx*ind->ny*ind->nz; i++)
-		for (int j = 0; j < ind->co[i]; j++)
-		{
-			double *pp=ind->p[i]+3*j;
-			point_for_crossover tmp_point = {*(pp++), *(pp++), *(pp++), i, j, false};
-			id2_to_coords[ind->id[i][j]] = tmp_point;
-		}
+	for (sorted_points::iterator it = sortp.begin(); it != sortp.end(); it++)
+		for (map<double, map<double, int>>::iterator it2 = it->second.begin(); it2 != it->second.end(); it2++)
+			for (map<double, int>::iterator it3 = it2->second.begin(); it3 != it2->second.end(); it3++)
+			{
+				point_for_crossover tmp_point = {it->first, it2->first, it3->first, 0, 0, false};
+				id2_to_coords[it3->second] = tmp_point;
+			}
+
+	if (id2_to_coords.size() == 0)
+	{
+		cout << "strange: " << sortp.size() << " " << sortp.begin()->second.size() << " " << sortp.begin()->second.begin()->second.size() << endl;
+	}
 	return id2_to_coords;
 }
 
-void GeneticAlgoForSizesClass::select_interchange_regions(container* ind1, std::map<int, point_for_crossover> *id1_to_coords, int id)
+void GeneticAlgoForSizesClass::select_interchange_regions(container* ind1, std::map<int, point_for_crossover> *id1_to_coords, 
+	int id, int from, int to, neighbors neg)
 {
-	int first_particles = 1 + ceil(rnd()*particles);
+	int first_particles = from + ceil(rnd()*(to - from));
 	int selected_particles = 0;
 	
-	voronoicell_neighbor c;
 	vector<int> neigh;
 	
 	int *points;
 	points = new int[first_particles];
 	points[selected_particles] = id;
+	
 	(*id1_to_coords)[id].is_interchanged = true;
 	
 	selected_particles++;
@@ -277,34 +351,15 @@ void GeneticAlgoForSizesClass::select_interchange_regions(container* ind1, std::
 	
 	// selecting region for a crossover
 	while (selected_particles < first_particles){
-		if(ind1->compute_cell(c, (*id1_to_coords)[points[checked_particles]].block, 
-			(*id1_to_coords)[points[checked_particles]].particle)) {
-			
-			
-			checked_particles++;
-			
-			c.neighbors(neigh);
-			
-			for (std::vector<int>::iterator it = neigh.begin() ; it != neigh.end(); ++it)
-				if (selected_particles < first_particles) 
-				{
-					// printf("selected_particels %i\n", selected_particles);
-					points[selected_particles++] = *it;
-					(*id1_to_coords)[*it].is_interchanged = true;
-				}
-				else break;
-				
-		}
-		else {
-			printf("FAIL FOR individual - point_id: %i, partic_per_block: %i, block: %i, partic_index: %i, xyz: %f %f %f\n", points[checked_particles], ind1->co[(*id1_to_coords)[points[checked_particles]].block], 
-				(*id1_to_coords)[points[checked_particles]].block, (*id1_to_coords)[points[checked_particles]].particle,
-				(*id1_to_coords)[points[checked_particles]].x, (*id1_to_coords)[points[checked_particles]].y,
-				(*id1_to_coords)[points[checked_particles]].z);
-			
-			get_ind_points(ind1, true);
-			exit(0);
-			break;
-		}
+		neigh = neg[points[checked_particles++]];
+		for (std::vector<int>::iterator it = neigh.begin() ; it != neigh.end(); it++)
+			if (selected_particles < first_particles && *it > -1) 
+			{
+				// printf("selected_particels %i\n", selected_particles);
+				points[selected_particles++] = *it;
+				(*id1_to_coords)[*it].is_interchanged = true;
+			}
+			else break;
 	}
 	
 	delete [] points;
@@ -317,8 +372,13 @@ void GeneticAlgoForSizesClass::select_interchange_randomly(std::map<int, point_f
 			(*id1_to_coords)[it->first].is_interchanged = true;
 }
 
-container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, double** size_dist, int iter, int crossover_points)
+container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, double* penalty, int iter, int crossover_points, 
+	sorted_points** exp, sorted_points** exp_off, int from, int to, neighbors* neg)
 {
+	sorted_points* experiment = *exp;
+	sorted_points* experiment_tmp = *exp_off;
+	
+	time_point<system_clock> stop1, stop2;
 	
 	int offspring_amount = surviving_size;
 	voronoicell_neighbor c1;
@@ -326,7 +386,7 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 	
 	std::map<double, int> penalty_rating;
 	for (int i = 0; i < population_size; i++)
-		penalty_rating[size_penalty(size_dist[i], 0, 0)] = i;
+		penalty_rating[penalty[i]] = i;
 	
 	
 	int survived = 0;
@@ -340,30 +400,40 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 	{
 		
 		//tournament select of 2 individuals for a crossover
-		int index1 = tournament_selection(size_dist, iter, offspring_amount);
+		int index1 = tournament_selection(penalty, iter, offspring_amount);
 		
 		container* ind1 = con[index1];
-		int index2 = tournament_selection(size_dist, iter, offspring_amount, index1);
+		int index2 = tournament_selection(penalty, iter, offspring_amount, index1);
 		container* ind2 = con[index2];
 		
 		//making mapping ID => xyz_bool where bool is if point goes to ind1 or not
-		std::map<int, point_for_crossover> id1_to_coords = ind_points_map(ind1);
-		std::map<int, point_for_crossover> id2_to_coords = ind_points_map(ind2);
+		std::map<int, point_for_crossover> id1_to_coords = ind_points_map(experiment[index1]);
+		std::map<int, point_for_crossover> id2_to_coords = ind_points_map(experiment[index2]);
 		
 		//making mapping from particels of ind1 to ind2
-		std::map<int, int> id_to_id = ind_to_ind(ind1, ind2);
+		std::map<int, int> id_to_id = ind_to_ind(index1, index2, exp);
 		
+		// cout << "pre regions select" << endl;
 		if (crossover_points != -1)
 		{
-			select_interchange_regions(ind1, &id1_to_coords, id1_to_coords.begin()->first);
+			auto item = id1_to_coords.begin();
+			advance( item, rnd() * id1_to_coords.size() );
+			
+			// cout << "first select" << endl;
+			select_interchange_regions(ind1, &id1_to_coords, item->first, from, to, neg[index1]);
 			if (crossover_points == 2)
 			{
-				std::map<int, point_for_crossover>::iterator it=id1_to_coords.begin();
-				select_interchange_regions(ind1, &id1_to_coords, (++it)->first);
+				auto item = id1_to_coords.begin();
+				advance( item, rnd() * id1_to_coords.size() );
+			
+				// cout << "second select" << endl;
+				select_interchange_regions(ind1, &id1_to_coords, item->first, from, to, neg[index1]);
 			}
 		} else {
 			select_interchange_randomly(&id1_to_coords);
 		}
+		
+		// cout << "post regions select" << endl;
 		container *offspring1 = NULL;
 		container *offspring2 = NULL;
 		
@@ -374,12 +444,21 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 		
 		std::map<double, std::map<double, double> > points_map1;
 		std::map<double, std::map<double, double> > points_map2;
+		experiment_tmp[offspring_amount].clear();
+		experiment_tmp[offspring_amount + 1].clear();
 		// std::cout << "before copy of points\n";
 		for (std::map<int, point_for_crossover>::iterator it=id1_to_coords.begin(); it!=id1_to_coords.end(); ++it){
 				
 			//here might be problems because of =
 			double x = it->second.x, y = it->second.y, z = it->second.z; 
 			double x2 = id2_to_coords[id_to_id[it->first]].x, y2 = id2_to_coords[id_to_id[it->first]].y, z2 = id2_to_coords[id_to_id[it->first]].z; 
+			// if (x == 0 || y == 0 || z == 0 || x2 == 0 || y2 == 0 || z2 == 0)
+			// {
+				// cout << it->first << " " << id_to_id[it->first] << " indices: " << index1 << " " << index2 << endl;
+				// cout << x << " " << y << " " << z << " " << x2 << " " << y2 << " " << z2 << endl;
+				// exit(0);
+				
+			// }
 			if (it->second.is_interchanged)
 			{
 				// std::cout << "new point1-1 " << x << " " << y << " " << z << " points map: " << points_map1[x][y] << "\n";
@@ -388,20 +467,26 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 				{
 					points_map1[x][y] = z;
 					offspring1->put(it->first, x, y, z);
+					experiment_tmp[offspring_amount][x][y][z] = it->first;
 				} else {
 					double shifted_x = mutate(x, x_min, x_max);
 					points_map1[shifted_x][y] = z;
 					offspring1->put(it->first + 10000, shifted_x, y, z);
+					experiment_tmp[offspring_amount][shifted_x][y][z] = it->first + 10000;
+					// cout << "bad id: " << it->first << ": " << x << " " << y << " " << z << endl;
+					// cout << index1 << " " << index2 << endl;
 				}
 				
 				if (points_map2[x2][y2] != z2)
 				{
 					points_map2[x2][y2] = z2;
 					offspring2->put(it->first, x2, y2, z2);
+					experiment_tmp[offspring_amount + 1][x2][y2][z2] = it->first;
 				} else {
 					double shifted_x = mutate(x2, x_min, x_max);
 					points_map2[shifted_x][y2] = z2;
 					offspring2->put(it->first, shifted_x, y2, z2);
+					experiment_tmp[offspring_amount + 1][shifted_x][y2][z2] = it->first;
 				}
 				
 			}
@@ -413,26 +498,34 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 					// std::cout << "NON mutated x " << x2 << "\n";
 					points_map1[x2][y2] = z2;
 					offspring1->put(it->first, x2, y2, z2);
+					experiment_tmp[offspring_amount][x2][y2][z2] = it->first;
 				} else {
 					double shifted_x = mutate(x2, x_min, x_max);
 					// std::cout << "mutated x " << shifted_x << "\n";
 					points_map1[shifted_x][y2] = z2;
 					offspring1->put(it->first + 10000, shifted_x, y2, z2);
+					experiment_tmp[offspring_amount][shifted_x][y2][z2] = it->first + 10000;
+					// cout << "bad id2: " << it->first << ": " << x2 << " " << y2 << " " << z2 << endl;
+					
+					// cout << index1 << " " << index2 << endl;
 				}
 				
 				if (points_map2[x][y] != z)
 				{
 					points_map2[x][y] = z;
 					offspring2->put(it->first, x, y, z);
+					experiment_tmp[offspring_amount + 1][x][y][z] = it->first;
 				} else {
 					double shifted_x = mutate(x, x_min, x_max);
 					points_map2[shifted_x][y] = z;
 					offspring2->put(it->first, shifted_x, y, z);
+					experiment_tmp[offspring_amount + 1][shifted_x][y][z] = it->first;
 				}
 				// offspring2->put(it->first, x, y, z);
 				// offspring1->put(it->first, x2, y2, z2);
 			}
 		}
+		// cout << "post points copy" << endl;
 		
 		// std::cout << "cross6 - " << offspring_amount << "\n";
 		
@@ -444,6 +537,8 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 		id1_to_coords.clear();
 		id2_to_coords.clear();
 		id_to_id.clear();
+		
+		
 	}
 	
 	// std::cout << "cross end - " << offspring_amount << "\n";
@@ -459,8 +554,9 @@ double GeneticAlgoForSizesClass::normal_dist(double x)
 	return 1/(sigma*sqrt(2*M_PI))*exp(-pow(x - mju, 2)/2/pow(sigma, 2));
 }
 
-double** GeneticAlgoForSizesClass::compute_cell_sizes(container** con)
+double** GeneticAlgoForSizesClass::compute_cell_sizes(container** con, neighbors** neg)
 {
+	neighbors* neg_t = *neg;
 	double x, y, z;
 	int id;
 	
@@ -471,6 +567,7 @@ double** GeneticAlgoForSizesClass::compute_cell_sizes(container** con)
 	for (int i = 0; i < population_size; i++){
 		voronoicell_neighbor c;
 		vector<double> v;
+		vector<int> neigh;
 		
 		c_loop_all cl(*(con[i]));
 		int loop_counter = 0;
@@ -481,7 +578,10 @@ double** GeneticAlgoForSizesClass::compute_cell_sizes(container** con)
 		
 			// Gather information about the computed Voronoi cell
 			c.vertices(x,y,z,v);
-
+			c.neighbors(neigh);
+			
+			neg_t[i][id] = neigh;
+			
 			int planes_size = 1;
 			double max = 0;
 			for (std::vector<double>::iterator it = v.begin(); it != v.end(); ++it){
@@ -521,6 +621,7 @@ void GeneticAlgoForSizesClass::output_data(std::string filename, double* size_di
 	
 	avg = avg / particles;
 	
+	
 	//normalization factor
 	double coef = 1 / penalty_step / particles;
 	for (int i = 0; i < penalty_steps; i++)
@@ -536,14 +637,20 @@ void GeneticAlgoForSizesClass::output_data(std::string filename, double* size_di
 	ofstream myfile;
 	myfile.open (filename.c_str());
 	myfile << "Size(A)  Probability_real    Probability_expected\n";
+	double sum = 0;
+	int cnt = 0;
 	for (std::map<double, double>::iterator it=current_distribution.begin(); it!=current_distribution.end(); ++it)
 	{
-		myfile << it->first << "  " << it->second << "  " << original_distribution(it->first) << "\n";
+		cnt++;
+		double orig = original_distribution(it->first);
+		double diff = abs(orig - it->second);
+		sum += pow(diff, 2);
+		myfile << it->first << "  " << it->second << "  " << orig << " " << diff << " " << endl;
 	}
 	myfile.close();
 }
 
-void GeneticAlgoForSizesClass::write_penalty_step(std::string filename, int penalties, double penalty)
+void GeneticAlgoForSizesClass::write_penalty_step(std::string filename, double penalties, double penalty)
 {	
 	ofstream myfile;
 	myfile.open (filename.c_str(), ofstream::out | ofstream::app);

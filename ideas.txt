@@ -6,8 +6,8 @@ selection of individual with the highest fitness). after crossover we make mutat
 
 
 Questions:
-- talk about graphics for sizes algo configurations
-- talk about Laguerre tessellation
+- ask should i extract parameter for crossover max amount of particles for interchange
+- ask should i extract parameter for mutation regulate amplitude by coeff
 
 crossover operator
 mutation distribution	
@@ -20,7 +20,12 @@ population_size
 
 108 configs
 
- 
-2. form all necessary graphics for thesis
+
+2. run size algo for different values and build 2d colored graph
+
+
 
 100. Choose multibody potential
+0. rewrite crossover for multithreding //useless cause i do not have many cores(((
+0. rewrite program to use GPUs instead of CPUs
+0. write prog for continueing calc from the given result. for this write all steps info into files

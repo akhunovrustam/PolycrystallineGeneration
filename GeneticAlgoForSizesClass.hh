@@ -1,18 +1,7 @@
 #ifndef LatGen
 #define LatGen
 
-#define half_boxside 0.5
-#define penalty_steps 1000
-#define penalty_step 0.025
-#define max_iterations 20000
-#define max_allowed_penalty 0.0001
-#define surviving_size 0
-#define population_size_const 32
-#define particles 1000
-#define mutation_probability_default 0.10
-#define mutation_max_applitude 0.05
-#define crossover_probability 0.05
-
+#include "Consts.hh"
 #include <random>
 
 using namespace std;
@@ -37,21 +26,23 @@ public:
 	double mutate_dist(double mutation_max_applitude_e, int dist_num = 0);
 	double fitness_penalty(int points_number, double (*original_distribution)(double), map<double, double> current_distribution);
 	double size_penalty(double* size_dist, int iter, int offspring_amount);
-	double mutate(double val, double min, double max, bool adopted_shift = true, int dist_num = 0);
+	double mutate(double val, double min, double max, bool adopted_shift = true, int dist_num = 0, double mult = 1.0);
 	double reinit(double min, double max);
-	void mutation(container ***con1, bool reinit_flag = false, 
-		double mutation_probability = mutation_probability_default, int dist_num = 0);
-	int tournament_selection(double** size_dist, int iter, int offspring_amount, int selected = -1);
+	void mutation(container ***con1, int iteration, bool reinit_flag = false, 
+		double mutation_probability = mutation_probability_default, int dist_num = 0, sorted_points** exp = nullptr, double mult = 1.0);
+	int tournament_selection(double* penalty, int iter, int offspring_amount, int selected = -1);
 	point_for_crossover* get_ind_points(container* ind1, bool to_print = false);
-	map<int, int> ind_to_ind(container* ind1, container* ind2);
-	map<int, point_for_crossover> ind_points_map(container* ind);
-	void select_interchange_regions(container* ind1, map<int, point_for_crossover> *id1_to_coords, int id);
+	map<int, int> ind_to_ind(int ind1, int ind2, sorted_points** exp);
+	map<int, point_for_crossover> ind_points_map(sorted_points sortp);
+	void select_interchange_regions(container* ind1, map<int, point_for_crossover> *id1_to_coords, 
+		int id, int from, int to, neighbors neg);
 	void select_interchange_randomly(map<int, point_for_crossover> *id1_to_coords);
-	container** crossover_by_mapping(container** con, double** size_dist, int iter, int crossover_points = 1);
+	container** crossover_by_mapping(container** con, double* penalty, int iter, int crossover_points = 1, 
+		sorted_points** exp = nullptr, sorted_points** exp_off = nullptr, int from = 1, int to = particles, neighbors* neg = nullptr);
 	double normal_dist(double x);
-	double** compute_cell_sizes(container** con);
+	double** compute_cell_sizes(container** con, neighbors** neg);
 	void output_data(string filename, double* size_dist);
-	void write_penalty_step(string filename, int penalties, double penalty);
+	void write_penalty_step(string filename, double penalties, double penalty);
 	
 };
 
