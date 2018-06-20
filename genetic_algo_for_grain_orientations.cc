@@ -7,38 +7,27 @@
 #include "voro++.hh"
 #include "ExtraStructAndFunc.hh"
 #include "GeneticAlgoForOrientationsClass.cc"
+#include <thread> 
+#include <chrono>
 
+using namespace std;
+using namespace this_thread;
+using namespace chrono;
 
 int main(int argc, char *argv[]) {
-	string prefix = "2p_uniform_0.1_20";
-	if (argc == 3)
-	{
-		prefix = argv[2];
-		prefix += "_SEED_";
-		prefix += argv[1];
-		prefix += "_exp";
-	}
-	else if (argc == 2)
-	{
-		prefix = ((prefix + "_SEED_") + argv[1]) + "_exp";
-	}
+	time_point<system_clock> start, end, stop1, stop2;
+    start = system_clock::now();
+    
+	//parse app arguments
+	// 5th - multiplication, 6th - from, 7th - to
+	string prefix = "1p_uniform_0.8_10_1.0_10_100";
+	config cfg;
+	int population_size;
+	parse_args(argc, argv, &prefix, &cfg, &population_size);
 	
-	// exit(0);
-	config cfg = parse_prefix(prefix);
-	int population_size = population_size_const;
-	if (prefix != ""){
-		population_size = cfg.ps;
-	}
-	
-	std::stringstream ss;
-	
-	//create folder to save output data
-	std::time_t t = std::time(0);
-	std::tm* now = std::localtime(&t);
-    ss << now->tm_mday << "-" << (now->tm_mon + 1) << "-" << (now->tm_year + 1900) << "_" << (now->tm_hour) << "." << (now->tm_min);
-	
-	std::string filename = "results_orientation/orient_" + prefix + ss.str();
-	system(("mkdir " + filename).c_str());
+	//create dir for data
+	string filename;
+	create_dir(&filename, prefix, "results_orientation/");
 	
 	//initial variables etc
 	srand (time(NULL) * atoi(argv[1]));
@@ -77,9 +66,21 @@ int main(int argc, char *argv[]) {
 		
 	int penalties = 0;
 	parents_rel = algo->relative_euler(con, parents);
+	// exit(0);
+	double koef = 1 / (double)parents_rel[0].size();
+	int df = parents_rel[0].size() - 3000;
+	double k = 1 / pow(penalty_steps, 3);
+	double sum = df*pow(4*koef - k, 2);
+	int df2 = 1000 - df;
+	sum += df2*pow(3*koef - k, 2);
+	sum /= parents_rel[0].size();
+	cout << "min pen: " << sum << endl;
+	// exit(0);
+	
 	//iterate until reach max iterations or precision
 	while (true){
-		cout << "begin ========================================\n";
+		cout << "begin iter " << iterations << " ========================\n";
+		
 		int min_penalty_index = -1;
 		int max_penalty_index = -1;
 		min_penalty = 1000000;
@@ -89,7 +90,7 @@ int main(int argc, char *argv[]) {
 		for (int i = 0; i < population_size; i++){
 			penalty[i] = algo->size_penalty(parents_rel[i]);
 			avg_penalty += penalty[i];
-			cout << penalty[i] << "\n";
+			// cout << penalty[i] << "\n";
 			// exit(0);
 			common_pool[penalty[i]] = parents[i];
 			if (penalty[i] == 0.0)
@@ -109,7 +110,7 @@ int main(int argc, char *argv[]) {
 			}
 		}
 		avg_penalty /= population_size;
-		
+	
 		penalties += population_size;
 		algo->write_penalty_step(filename + "/penalty_steps_best.txt", penalties, min_penalty);
 		algo->write_penalty_step(filename + "/penalty_steps_worst.txt", penalties, max_penalty);
@@ -122,15 +123,14 @@ int main(int argc, char *argv[]) {
 			// exit(0);
 		}
 
-		cout << "penalty " << min_penalty << " !!!!!!\n";
+		cout << "penalty: " << min_penalty << " \n";
 
+		// exit(0);
 		if (min_penalty < max_allowed_penalty) {
 			// algo->output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
 	
 			break;
 		}
-		iterations++;
-		cout << "iter " << iterations << "\n";
 		
 		if (iterations > max_iterations) {
 			// algo->output_data((filename + "/dist_end.txt").c_str(), real_sizes[min_penalty_index]);
@@ -140,29 +140,12 @@ int main(int argc, char *argv[]) {
 		}
 		else algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_tmp.txt");
 			
-		// else algo->output_data((filename + "/dist_tmp.txt").c_str(), real_sizes[min_penalty_index]);
-		
-		// if (iterations == 2)
-		// {
-			// cout << parents[0].size() << "\n";
-			// exit(0);
-			// for (orient_unit::iterator it = parents[0].begin(); it != parents[0].end(); it++)
-				// cout << it->second.alpha << " " << it->second.beta << " " << it->second.gamma << "\n";
-		// }
 		
 		cout << "crossover\n";
 		
 		// con = crossover_by_mapping(con, real_sizes, -1);
 		offspring = algo->crossover_by_mapping(con, parents, parents_rel, cfg.co);
-		// con = crossover_by_mapping(con, real_sizes);
-		
-			// exit(0);
-		// if (iterations == 2)
-		// {
-			// for (orient_unit::iterator it = offspring[0].begin(); it != offspring[0].end(); it++)
-				// cout << it->second.alpha << " " << it->second.beta << " " << it->second.gamma << "\n";
-			// exit(0);
-		// }
+	
 		cout << "mutation\n";
 		algo->mutation(&offspring, cfg.md == 2 ? true : false, cfg.mp, cfg.md == 2 ? 0 : cfg.md);
 		
@@ -182,16 +165,9 @@ int main(int argc, char *argv[]) {
 			cout << pen << "\n";
 		}
 		
-		// cout << parents[0].size() << "\n";
-		// cout << parents[1].size() << "\n";
-		// cout << offspring[0].size() << "\n";
-		// cout << offspring[1].size() << "\n";
-		
 		cout << "post penalty recalc\n";
 		int selected_offspring = 0;
-		// for (map<double, orient_unit>::iterator it = common_pool.begin(); it != common_pool.end(); it++)
-			// cout << it->second.size() << "\n";
-		// exit(0);
+	
 		for (map<double, orient_unit>::iterator it = common_pool.begin(); 
 			it != common_pool.end(); it++, selected_offspring++)
 			if (selected_offspring < population_size)
@@ -199,6 +175,7 @@ int main(int argc, char *argv[]) {
 			else {}
 		
 		// exit(0);
+		iterations++;
 		
 		common_pool.clear();
 		delete [] offspring;
@@ -207,7 +184,6 @@ int main(int argc, char *argv[]) {
 		delete [] parents_rel;
 		parents_rel = algo->relative_euler(con, parents);
 		
-		cout << "end ========================================\n";
 	}
 	delete con;
 	delete algo;

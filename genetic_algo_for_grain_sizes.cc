@@ -14,18 +14,14 @@ using namespace std;
 using namespace this_thread;
 using namespace chrono;
 
-struct con_and_points{
-	container* con;
-	sorted_points pt;
-};
-
 int main(int argc, char *argv[]) {
 	time_point<system_clock> start, end, stop1, stop2;
     start = system_clock::now();
     
 	//parse app arguments
-	// 5th - multiplication, 6th - from, 7th - to
-	string prefix = "2p_uniform_0.8_20_1.0_10_100";
+	// 5th - multiplication for mutation amplitude, 6th - from, 7th - to, 8th - 1st threshold, 9th - 2nd thresholdб
+	// 10th - factor for mp, 11th - 1st threshold factor for population size, 12th - 2nd threshold factor for population size
+	string prefix = "2p_uniform_0.8_10_1.0_10_100_500_1000_10_5_9";
 	config cfg;
 	int population_size;
 	parse_args(argc, argv, &prefix, &cfg, &population_size);
@@ -83,12 +79,19 @@ int main(int argc, char *argv[]) {
 	// exit(0);
 	//iterate until reach max iterations or precision
 	int total_time = 0;
+	double mprob = cfg.mp;
 	while (true){
 		stop1 = system_clock::now();
 		cout << "begin iter " << iterations << " ========================\n";
 		
-		// if (iterations > 500) cfg.mp = 0.01;
-		// if (iterations > 1000) cfg.mp = 0.001;
+		if (iterations > cfg.thr1) {
+			cfg.ps_fac = cfg.ps_fac1;
+			cfg.mp = mprob/cfg.fac;
+		}
+		if (iterations > cfg.thr2) {
+			cfg.ps_fac = cfg.ps_fac2;
+			cfg.mp = mprob/cfg.fac/cfg.fac;
+		}
 		
 		int min_penalty_index = -1;
 		int max_penalty_index = -1;
@@ -147,7 +150,7 @@ int main(int argc, char *argv[]) {
 		// con = crossover_by_mapping(con, real_sizes, -1);
 		// offspring = con;
 		stop2 = system_clock::now();
-		offspring = algo->crossover_by_mapping(con, penalty, iterations, cfg.co, &experiment, &experiment_off, cfg.from, cfg.to, neg);
+		offspring = algo->crossover_by_mapping(con, penalty, iterations, cfg.co, &experiment, &experiment_off, cfg, neg);
 
 		
 		// exit(0);
@@ -185,7 +188,7 @@ int main(int argc, char *argv[]) {
 				// cout << "delete end \n";
 			}
 		
-		if (iterations % 10 == 0)
+		if (iterations % 100 == 0)
 		{
 			stringstream image;
 	

@@ -38,7 +38,7 @@ public:
 		int id, int from, int to, neighbors neg);
 	void select_interchange_randomly(map<int, point_for_crossover> *id1_to_coords);
 	container** crossover_by_mapping(container** con, double* penalty, int iter, int crossover_points = 1, 
-		sorted_points** exp = nullptr, sorted_points** exp_off = nullptr, int from = 1, int to = particles, neighbors* neg = nullptr);
+		sorted_points** exp = nullptr, sorted_points** exp_off = nullptr, config cfg = {}, neighbors* neg = nullptr);
 	double normal_dist(double x);
 	double** compute_cell_sizes(container** con, neighbors** neg);
 	void output_data(string filename, double* size_dist);

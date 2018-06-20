@@ -6,8 +6,7 @@ selection of individual with the highest fitness). after crossover we make mutat
 
 
 Questions:
-- ask should i extract parameter for crossover max amount of particles for interchange
-- ask should i extract parameter for mutation regulate amplitude by coeff
+
 
 crossover operator
 mutation distribution	
@@ -20,10 +19,7 @@ population_size
 
 108 configs
 
-
-2. run size algo for different values and build 2d colored graph
-
-
+1. decide what to do with  misorientation
 
 100. Choose multibody potential
 0. rewrite crossover for multithreding //useless cause i do not have many cores(((

@@ -373,7 +373,7 @@ void GeneticAlgoForSizesClass::select_interchange_randomly(std::map<int, point_f
 }
 
 container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, double* penalty, int iter, int crossover_points, 
-	sorted_points** exp, sorted_points** exp_off, int from, int to, neighbors* neg)
+	sorted_points** exp, sorted_points** exp_off, config cfg, neighbors* neg)
 {
 	sorted_points* experiment = *exp;
 	sorted_points* experiment_tmp = *exp_off;
@@ -396,7 +396,7 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 	
 	penalty_rating.clear();
 	
-	while (offspring_amount < population_size)
+	while (offspring_amount < population_size * cfg.ps_fac)
 	{
 		
 		//tournament select of 2 individuals for a crossover
@@ -420,14 +420,14 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 			advance( item, rnd() * id1_to_coords.size() );
 			
 			// cout << "first select" << endl;
-			select_interchange_regions(ind1, &id1_to_coords, item->first, from, to, neg[index1]);
+			select_interchange_regions(ind1, &id1_to_coords, item->first, cfg.from, cfg.to, neg[index1]);
 			if (crossover_points == 2)
 			{
 				auto item = id1_to_coords.begin();
 				advance( item, rnd() * id1_to_coords.size() );
 			
 				// cout << "second select" << endl;
-				select_interchange_regions(ind1, &id1_to_coords, item->first, from, to, neg[index1]);
+				select_interchange_regions(ind1, &id1_to_coords, item->first, cfg.from, cfg.to, neg[index1]);
 			}
 		} else {
 			select_interchange_randomly(&id1_to_coords);

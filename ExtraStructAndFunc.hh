@@ -23,6 +23,12 @@ struct config{
 	double mult; 	//multiplication for mutation amplitude
 	double from; 	//from how many particles make crossover
 	double to; 		//to how many particles make crossover
+	double thr1; 	//first threshold
+	double thr2; 	//second threshold
+	double fac; 	//threshold decrease factor
+	int ps_fac1; //threshold decrease factor for ps
+	int ps_fac2; //threshold decrease factor for ps
+	int ps_fac;  //commond factor
 };
 
 config parse_prefix(string prefix)
@@ -43,6 +49,16 @@ config parse_prefix(string prefix)
 	string from = s;
 	getline(f, s, '_');
 	string to = s;
+	getline(f, s, '_');
+	string threshold1 = s;
+	getline(f, s, '_');
+	string threshold2 = s;
+	getline(f, s, '_');
+	string factor = s;
+	getline(f, s, '_');
+	string ps_fac1 = s;
+	getline(f, s, '_');
+	string ps_fac2 = s;
 	
 	config cfg;
 	if (co == "uniform") cfg.co = -1;
@@ -63,6 +79,17 @@ config parse_prefix(string prefix)
 	
 	cfg.to = stoi(to);
 	
+	cfg.thr1 = stoi(threshold1);
+	
+	cfg.thr2 = stoi(threshold2);
+	
+	cfg.fac = stoi(factor);
+	
+	cfg.ps_fac1 = stoi(ps_fac1);
+	
+	cfg.ps_fac2 = stoi(ps_fac2);
+	
+	cfg.ps_fac = 1;
 	return cfg;
 }
 
@@ -88,7 +115,7 @@ void parse_args(int argc, char* argv[], string* prefix, config* cfg, int* popula
 	}
 }
 
-void create_dir(string* filename, string prefix)
+void create_dir(string* filename, string prefix, string folder = "results_size/")
 {
 	stringstream ss;
 	
@@ -97,7 +124,7 @@ void create_dir(string* filename, string prefix)
 	tm* now = localtime(&t);
     ss << now->tm_mday << "-" << (now->tm_mon + 1) << "-" << (now->tm_year + 1900) << "_" << (now->tm_hour) << "." << (now->tm_min);
 	
-	*filename = "results_size/" + prefix + ss.str();
+	*filename = folder + prefix + ss.str();
 	system(("mkdir " + *filename).c_str());
 	
 }
@@ -117,7 +144,13 @@ struct euler_angles {
 	double gamma;
 };
 
+
 typedef map<int, vector<int>> neighbors;
 typedef map<double, map<double, map<double, int>>> sorted_points;
 typedef map<string, euler_angles> orient_unit;
 double rnd() {return double(rand())/RAND_MAX;}
+
+struct con_and_points{
+	container* con;
+	sorted_points pt;
+};
