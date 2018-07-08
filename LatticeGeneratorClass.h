@@ -15,7 +15,7 @@ using namespace std;
 using namespace voro;
 
 #define PI 3.14159265
-#define LATTICE 0.2
+#define LATTICE 4.095
 
 class LatticeGeneratorClass
 {
@@ -33,7 +33,7 @@ public:
 	double rnd() {return double(rand())/RAND_MAX;}
 
 	void calculateGrainPlanes(vector<int> &f_vert,vector<double> &v,int j, float** planes, float x, float y, float z, int planes_size);
-	int generateLattice(float** grain);
+	atoms generateLattice(float** grain, euler_angles angles);
 	void fillRandomlyAndBuildGrains();
 };
 

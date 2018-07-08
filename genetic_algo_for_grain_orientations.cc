@@ -20,7 +20,7 @@ int main(int argc, char *argv[]) {
     
 	//parse app arguments
 	// 5th - multiplication, 6th - from, 7th - to
-	string prefix = "1p_uniform_0.8_10_1.0_10_100";
+	string prefix = "1p_uniform_0.9_10_1.0_10_100_500_1000_10_5_9";
 	config cfg;
 	int population_size;
 	parse_args(argc, argv, &prefix, &cfg, &population_size);
@@ -54,9 +54,12 @@ int main(int argc, char *argv[]) {
 		sign << x << "|" << y << "|" << z;
 		string signstr = sign.str();
 		for (int i = 0; i < population_size; i++){
-			double alpha = algo->reinit_angles();
-			double beta = algo->reinit_angles();
-			double gamma = algo->reinit_angles();
+			double alpha = rnd()*0.15;
+			// double alpha = algo->reinit_angles();
+			double beta = rnd()*0.15;
+			// double beta = algo->reinit_angles();
+			double gamma = rnd()*0.15;
+			// double gamma = algo->reinit_angles();
 			// if (alpha < 0 || beta < 0 || gamma < 0)
 				// cout << "bad angles: " << alpha << " " << beta << " " << gamma << "\n";
 			parents[i][signstr] = {alpha, beta, gamma};
@@ -118,7 +121,7 @@ int main(int argc, char *argv[]) {
 		
 		if (iterations == 0){
 			algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_first.txt");
-			// algo->output_data((filename + "/dist_first.txt").c_str(), real_sizes[min_penalty_index]);
+			algo->output_data((filename + "/dist_first.txt").c_str(), parents_rel[min_penalty_index]);
 			cout << (filename + "/dist_first.txt\n");
 			// exit(0);
 		}
@@ -138,16 +141,25 @@ int main(int argc, char *argv[]) {
 	
 			break;
 		}
-		else algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_tmp.txt");
+		else 
+		{
+			// algo->size_penalty(parents_rel[min_penalty_index], filename + "/dist_tmp.txt");
+			algo->output_data((filename + "/dist_tmp.txt").c_str(), parents_rel[min_penalty_index]);
+			
+		}
 			
 		
 		cout << "crossover\n";
 		
 		// con = crossover_by_mapping(con, real_sizes, -1);
 		offspring = algo->crossover_by_mapping(con, parents, parents_rel, cfg.co);
-	
+		
+		cout << "pr angle: " << parents[0].begin()->second.alpha << endl;
+		cout << "fr angle: " << offspring[0].begin()->second.alpha << endl;
+		
 		cout << "mutation\n";
 		algo->mutation(&offspring, cfg.md == 2 ? true : false, cfg.mp, cfg.md == 2 ? 0 : cfg.md);
+		cout << "fr angle2: " << offspring[0].begin()->second.alpha << endl;
 		
 		cout << "post genetic algo\n";
 		offspring_rel = algo->relative_euler(con, offspring);
@@ -162,7 +174,7 @@ int main(int argc, char *argv[]) {
 		{
 			double pen = algo->size_penalty(offspring_rel[i]);
 			common_pool[pen] = offspring[i];
-			cout << pen << "\n";
+			// cout << pen << "\n";
 		}
 		
 		cout << "post penalty recalc\n";

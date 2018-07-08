@@ -1,2 +1,0 @@
-Step  Penalty
-10  1e+06

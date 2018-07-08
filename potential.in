@@ -1,0 +1,8 @@
+pair_style      eam/alloy
+
+if "${atom} == Al" then &
+	"pair_coeff      * * ../0A_resources/potentials/llb/AlCu.eamllb.alloy Al"
+if "${atom} == Cu" then &
+	"pair_coeff      * * ../0A_resources/potentials/llb/AlCu.eamllb.alloy Cu"
+if "${atom} == bin" then &
+	"pair_coeff      * * ../0A_resources/potentials/llb/AlCu.eamllb.alloy Al Cu"

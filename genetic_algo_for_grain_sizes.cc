@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     start = system_clock::now();
     
 	//parse app arguments
-	// 5th - multiplication for mutation amplitude, 6th - from, 7th - to, 8th - 1st threshold, 9th - 2nd thresholdб
+	// 5th - multiplication for mutation amplitude, 6th - from, 7th - to, 8th - 1st threshold, 9th - 2nd threshold
 	// 10th - factor for mp, 11th - 1st threshold factor for population size, 12th - 2nd threshold factor for population size
 	string prefix = "2p_uniform_0.8_10_1.0_10_100_500_1000_10_5_9";
 	config cfg;

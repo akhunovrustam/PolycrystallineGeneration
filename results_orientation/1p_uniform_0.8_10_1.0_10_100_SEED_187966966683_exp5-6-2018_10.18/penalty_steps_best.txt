@@ -1,2 +1,0 @@
-Step  Penalty
-10  4.56864e-08

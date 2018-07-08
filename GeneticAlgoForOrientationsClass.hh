@@ -18,13 +18,25 @@ public:
 	int population_size;
 	default_random_engine generator;
 	normal_distribution<double> distribution;
-	
+	int rot[24][3][3] = {{{1, 0, 0}, {0, 1, 0}, {0, 0, 1}}, {{1, 0, 0}, {0, 0, -1}, {0, 1, 0}},
+	{{1, 0, 0}, {0, -1, 0}, {0, 0, -1}}, {{1, 0, 0}, {0, 0, 1}, {0, -1, 0}},
+	{{0, 0, 1}, {0, 1, 0}, {-1, 0, 0}}, {{-1, 0, 0}, {0, 1, 0}, {0, 0, -1}},
+	{{0, 0, -1}, {0, 1, 0}, {1, 0, 0}}, {{0, -1, 0}, {1, 0, 0}, {0, 0, 1}},
+	{{-1, 0, 0}, {0, -1, 0}, {0, 0, 1}}, {{0, 1, 0}, {-1, 0, 0}, {0, 0, 1}},
+	{{0, 1, 0}, {1, 0, 0}, {0, 0, -1}}, {{0, -1, 0}, {-1, 0, 0}, {0, 0, -1}},
+	{{0, 0, 1}, {0, -1, 0}, {1, 0, 0}}, {{-1, 0, 0}, {0, 0, 1}, {0, 1, 0}},
+	{{0, 0, -1}, {0, -1, 0}, {-1, 0, 0}}, {{-1, 0, 0}, {0, 0, -1}, {0, -1, 0}},
+	{{0, 0, 1}, {1, 0, 0}, {0, 1, 0}}, {{0, 1, 0}, {0, 0, 1}, {1, 0, 0}},
+	{{0, -1, 0}, {0, 0, 1}, {-1, 0, 0}}, {{0, 0, -1}, {-1, 0, 0}, {0, 1, 0}},
+	{{0, 0, -1}, {1, 0, 0}, {0, -1, 0}}, {{0, 1, 0}, {0, 0, -1}, {-1, 0, 0}},
+	{{0, -1, 0}, {0, 0, -1}, {1, 0, 0}}, {{0, 0, 1}, {-1, 0, 0}, {0, -1, 0}}};
+
 	GeneticAlgoForOrientationsClass(int pop_size);
 	void write_penalty_step(string filename, int penalties, double penalty);
-	static double original_distribution(string point);
+	static double original_distribution(double point);
 	double mutate_dist(double mutation_max_applitude_e, int dist_num = 0);
-	double fitness_penalty(int points_number, double (*original_distribution)(string), 
-		map<string, double> current_distribution, string output = "");
+	double fitness_penalty(int points_number, double (*original_distribution)(double), 
+		map<double, double> current_distribution, string output = "");
 	double size_penalty(orient_unit parent_rel, string output = "");
 	euler_angles mutate(euler_angles angles, double min, double max, bool adopted_shift = true, int dist_num = 0);
 	double reinit(double min, double max);
@@ -41,7 +53,7 @@ public:
 	orient_unit* crossover_by_mapping(container* con, orient_unit* parents, orient_unit* parents_rel, int crossover_points = 1);
 	double normal_dist(double x);
 	double** compute_cell_sizes(container** con);
-	void output_data(string filename, double* size_dist);
+	void output_data(string filename, orient_unit size_dist);
 	orient_unit* relative_euler(container* con, orient_unit *abs_euler);
 };
 

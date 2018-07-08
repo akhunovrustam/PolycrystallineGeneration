@@ -1,13 +1,20 @@
-\documentclass{article}
+%\documentclass{article}
 %\documentclass[journal]{IEEEtran}
-%\documentclass{report}
+\documentclass[12pt]{report}
 %\documentclass{acta}
 
 \usepackage{graphicx}
+\usepackage{amsmath}
+\usepackage{gensymb}
 \graphicspath{{./media/}}
 \begin{document}
 
-\title{Constructing three-dimensional (3D) polycrystalline models of FCC crystal for numerical modeling and simulation with multibody potential}
+\title{
+	{Generating of realistic polycrystalline structure}\\
+	{\large Gdansk University of Technology}\\
+	{\large MathMods Erasmus Mundus Joint Master Degree}\\
+	{\includegraphics[width=3.0in]{pg_logo.jpg}}
+}
 \author{Rustam Akhunov}
 
 \maketitle
@@ -15,7 +22,7 @@
 \tableofcontents
 
 \begin{abstract}
-The three-dimensional (3D) polycrystalline models of FCC crystal with the log-normal grain size distribution are constructed by constrained Voronoi tessellation. For achieving needed distribution of grain sizes and grain orientation we used Genetic Algorithm (GA) with Least Square (LS). We used molecular-dynamics method in LAMMPS software to obtain the relaxed polycrystal. For the relaxation process and for simulation we used multibody potential.
+The three-dimensional polycrystalline models with the log-normal grain size distribution are constructed by constrained Voronoi tessellation. For achieving needed distribution of grain sizes and grain orientation I used Genetic Algorithm with Least Square. GA is also used for achieving realistic distribution for grain orientation distribution. Molecular-dynamics method is used in LAMMPS software to obtain the relaxed polycrystal. For the relaxation process and for simulation multibody potential is used.
 \end{abstract}
 
 
@@ -25,45 +32,46 @@ There are known a lot of modern application of polycristalline materials. Polycr
 
 There are numbers of experiments and theoretical research for the intrinsic structure, effective thermal conductivity, lattice dynamical, optical and thermodynamic properties of polycristalline \cite{shen15}. But still many characteristics have not been researched sufficiently.
 
-We know few methods for generating digital nanostructured materials for use in the simulation: Poisson–Voronoi tessellation (PVT) \cite{wear86}, Monodispersive grain size (MGS) \cite{wang96}, Laguerre–Voronoi tessellation (LVT) \cite{fan04}, Johnson–Mehl (JM) model \cite{okabe00} etc. In this work we used Voronoi tesselation model for the reason of its good solution for the complex sctructural nanocrystals and also convinient interface for the genetic algorithm, that we used during our polycristalline generation. It is also generally accepted that many single-phase fully dense nanocrystals are described by a log-normal grain size distribution. And we took this distribution as a reference for polycristalline generation.
+We know few methods for generating digital nanostructured materials for use in the simulation: Poisson–Voronoi tessellation (PVT) \cite{wear86}, Monodispersive grain size (MGS) \cite{wang96}, Laguerre–Voronoi tessellation (LVT) \cite{fan04}, Johnson–Mehl (JM) model \cite{okabe00} etc. In this work I used Voronoi tesselation model for the reason of its good solution for the complex sctructural nanocrystals and also convinient interface for the genetic algorithm, that I used during our polycristalline generation. It is also generally accepted that many single-phase fully dense nanocrystals are described by a log-normal grain size distribution. And I took this distribution as a reference for polycristalline generation.
 
-The goal of this work is implementation of general methodology of generation realistic polycrystalline structure. It should correspond grain sizes and orienation distribution, have minimal energy and be relevant to experimental density, lattice constant etc. The methodology also should be fast enough in order to do generation in one or several days on adequate resources. This all we are trying to do using existing results for different polycrystallines.
+The goal of this work is implementation of general methodology of generation realistic polycrystalline structure. It should correspond grain sizes and orienation distribution, have minimal energy and be relevant to experimental density, lattice constant etc. The methodology also should be fast enough in order to do generation in one or several days on adequate resources. This all I am trying to do using existing results for different polycrystallines.
 
 
 \section{Overview of existing methods and results}
 
 Before my research I did an overview of existing results in several related papers. One of the most important article for our research was "Constructing three-dimensional (3D) nanocrystalline models of $ Li_4SiO_4 $ for numerical modeling and simulation" \cite{shen15}.
 
-In this paper authors considers problem of generation $ Li_4SiO_4 $ polycrystalline that is  narrowing the result for particular matter. But we rather try to implement more general approach. Of course by making more general method we face much more problem with efficiency and time consuming of the generation method. But even general method can be fitted to the particular element.
+In this paper authors considers problem of generation $ Li_4SiO_4 $ polycrystalline that is  narrowing the result for particular matter. But I rather try to implement more general approach. Of course by making more general method I face much more problems with efficiency and time consuming of the generation method. But even general method can be fitted to the particular element.
 
-The authors use genetic algorithm to reach particular distribution of grain sizes and as we can see they use only mutation operator without crossover. But we in contrary use both mutation and crossover. Moreover we implemented 3 variants of crossover and 3 variants of mutation in order to find optimal operators for our task. We implemented numerous computing experiments and chose optimal combination of operators and other algorithm parameters.
+The authors use genetic algorithm to reach particular distribution of grain sizes and as I can see they use only mutation operator without crossover. But I in contrary use both mutation and crossover. Moreover I implemented 3 variants of crossover and 3 variants of mutation in order to find optimal operators for our task. I implemented numerous computing experiments and chose optimal combination of operators and other algorithm parameters.
 
 But it is necessary to pay tribute to the good results obtained during implementation of the algorithm. Authors were able to reach very good permormance. In particular the computation time per step was 3.7 s with 6 processors and it is much better compared to the result 3.9 s with 32 processors \cite{suzudo02}.
 
-Even the article mentioned above is a basis for my research I did more deep overview of the topic regarding methods available to generate realistic polycrystalline structure. And one of the intereseting paper dedicated to the problem is "Lattice models of polycrystalline microstructures: A quantitative approach" \cite{rinaldi08}.
+Another interesting paper dedicated to the problem is "Lattice models of polycrystalline microstructures: A quantitative approach" \cite{rinaldi08}.
 
 Here authors refer to available methods for creating polycrystalline structure. Among several different approaches they mention Voronoi tesselation as a good method for obtaining the polycrystalline structure. It is noticed that this method is very popular and wide spread in fitting to the experimental data and therefore presented in special commercial software such as AMIRA, MIMICS, SURFDRIVER.
 
-Of course Voronoi tesselation method has disadvantages like that it represents only convex polyhedra that is not true for real polycrystals. It is also known that real grains not necessary polyhedra at all. Nonetheless, Voronoi tesselation remains very quick and reliable method of generation structures close to the real polycrystalls. 
+Of course Voronoi tesselation method has disadvantages like that it represents only convex polyhedra that is not true for real polycrystals. It is also known that real grains are not necessary polyhedra at all. Nonetheless, Voronoi tesselation remains very quick and reliable method of generation structures close to the real polycrystalls. 
 
-In the paper it is also noticed that instead of focusing on precise microstructure much better focus on major statistics like  distribution of grain size and grain orientation. It is actually what I am doing in my work.
+In the paper it is also noticed that instead of focusing on precise microstructure it is much better focus on major statistics like  distribution of grain size and grain orientation. It is actually what I am doing in my work.
 
-However, in the paper the main goal is achieving the mechanically equivalent polycrystalline. Although this approach is good for mechanical properties of material it loses any other aspects of real matter. This is why we cannot apply current results in our research.
+However, in the paper the main goal is achieving the mechanically equivalent polycrystalline. Although this approach is good for mechanical properties of material it loses any other aspects of real matter. This is why I cannot apply current results in our research.
 
 Another significant result in realistic generation of polycrystalline structure was achieved in "Mechanical properties of polycrystalline graphene based on a realistic atomistic model" \cite{kotak12}.
 
 Here authors did great work in order to obtain realistic atomic structure of graphene. They implemented algorithm for atomic structure generation based on the growth principle. It means that after random location of grain centers they tried to simulate growth of grains by considering borders of growing grain step by step. They also followed misorientation distribution that have one to one correspondence with orientation distrubution. It is also emphasized the importance of realistic simulation of grain boundaries because of their significant impact on mechanical and electrical properties of material.
 
-The main disadvantages in the work that the result is valid only for graphene and graphene like structures. This limitation I will try to bypass in my work. There is also problem with algorithm used in paper. This approach needs more computing resources and have some difficulties in parallelising. Usually such structure construction need days for obtaining usable results if the system have usual for simulation sizes. The real distribution of grain sizes is absolutely neglected in the paper. It is considered only uniform distribution for the grains that does not follow real structures. But nonetheless, I borowed some ideas for misorientation distribution in my work.
+The main disadvantages in the work is that the result is valid only for graphene and graphene like structures. I will try to bypass this limitation in my work. There is also problem with algorithm used in the paper. This approach needs more computing resources and have some difficulties in parallelism. Usually such structure construction need days for obtaining usable results if the system has usual for simulation sizes. The real distribution of grain sizes is absolutely neglected in the paper. It is considered only uniform distribution for the grains that does not follow real structures. But nonetheless, I borowed some ideas for misorientation distribution in my work.
 
 In following "Studying the elastic properties of nanocrystalline copper using a model of randomly packed uniform grains" \cite{guo13} paper I found interesting new approach in studying mechanincal properties of nanoscaled polycrystalline materials. Authors offer concentrate on finding dependency of elastic module on grain boundaries and therefore they make artificial ideal polycrystall where they obtain uniform grain sizes that is not true for realistic structures.
 
-The last very interesting paper to talk about that was considered during literature overview was "Generation of 3D polycrystalline microstructures with a conditioned Laguerre-Voronoi tessellation technique" \cite{falco13}.
-Here authors got really singnificant results in obtaining very close to real size distribution polycrystalline structure. In order to do this they used extended Voronoi tessellation method so called Laguerre-Voronoi tessellation. They implemented procedures that allows to associate particles weights with the grains sizes. This method helps to obtain very realistic distribution of grain sizes and use it in the following simulation that they actually did. During simulation using this kind of tessallation they compared simulation results with real experiments with annealed aluminum. Obtained results show high efficiency of this approach and can be used in our work too. Thank to developer of Voro++ library this tessellation is already implemented in the library and we can use Laguerre-Voronoi tesselation as first approximation in our genetic algorithm. It can significantly improve time of calculation.
+The last very interesting paper to talk about that was considered during literature overview was "Generation of 3D polycrystalline microstructures with a conditioned Laguerre-Voronoi tessellation technique" \cite{falco15}.
 
-Now from the papers about theoretical statements we move to the practical results that currently exist and can help to generate polycrystalline structure.
+Here authors got really singnificant results in obtaining very close to real size distribution polycrystalline structure. In order to do this they used extended Voronoi tessellation method so called Laguerre-Voronoi tessellation. They implemented procedures that allows to associate particles weights with the grains sizes. This method helps to obtain very realistic distribution of grain sizes and use it in the following simulation that they actually did. During simulation using this kind of tessallation they compared simulation results with real experiments with annealed aluminum. Obtained results show high efficiency of this approach and can be used in our work too. Thank to developer of Voro++ library this tessellation is already implemented in the library and I can use Laguerre-Voronoi tesselation as first approximation in our genetic algorithm. It can significantly improve time of calculation.
 
-Firstly, I would like to mention very useful modern software so called nanoSculpt \cite{prak16}. It allows to construct atomic structure inside any shape and forms. It also support constructing of Voronoi tessellation for polycrystalls in any shape. It was written using C language and easy extensible enough. But unfortunatelly, currently this package does not support following particular distribution of grain size and orientation during costruction of structure. 
+Now from the papers about theoretical statements I move to the practical results that currently exist and can help to generate polycrystalline structure.
+
+Firstly, I would like to mention very useful modern software so called nanoSculpt \cite{prak16}. It allows to construct atomic structure inside any shape and form. It also supports constructing of Voronoi tessellation for polycrystalls in any shape. It was written using C language and quite easy extensible. But unfortunatelly, currently this package does not support following particular distribution of grain size and orientation during costruction of structure. 
 
 Another interesting tool is AtomEye \cite{juli03} developed by MIT staffs. It is very comprehensive and powerfull tool for dealing with atomic structure. One of the most interesting util for me in this package is so called voronoirize tool. It can be used for building polycrystalline structures. The software is written in C language. But again problem it does not follow user defined distributions of sizes and orientations. 
 
@@ -75,159 +83,400 @@ These all reasons inspired me to create useful tool for generating realistic pol
 
 \section{Building the Voronoi tessellation}
 
-As it was mentioned above we use Voronoi tessellation for building our polycrystalline structure. But for obtaining real stucture we have to fit some properties of natural crystalls during generation of tessellation. In our work we are especially interested in fitting tessellation to the two crucial distributions: grain size distribution and grain orientation distribution. All generation done in periodic condition of the boundary.
+As it was mentioned above I use Voronoi tessellation for building polycrystalline structure. But for obtaining real stucture I have to fit some properties of natural crystalls during generation of tessellation. In this work I am especially interested in fitting tessellation to the two crucial distributions: grain size distribution and grain orientation distribution. All generation done in periodic condition of the boundary.
 
-\subsection{Building the Voronoi tessellation fitting the given grain size distribution}
+\subsection{Grain size distribution}
 
-In our generation process we tested several distributions for grain size but only one of them was chosen as a discribution for real polycsystall, it is lognormal distribution \cite{shen15, liu14}.
+Grain size distribution depends on many characteristics of polycrystal growth (velocity of crystallization, extra magnetic field etc) and environmental factors (temperature, pressure etc). It is widly beleived that in general any grain size distribution in polycrystals can be fitted to the lognormal function \cite{shen15, liu14}:
 
-As far as we have a set of 3D points in the space as a individual we are considering all operators acting on these points because we do not have any other objects to deal with.
-So, crossover operator just exchange points between two individuals according to the some rule defined in the implementation. And mutation operator just shifts the given points of individual according to the defined probability.
+\begin{equation} \label{lognormal}
+f(x) = \frac{1}{x} \frac{1}{\sigma \sqrt{2\pi}}exp(-\frac{(ln(x) - \mu)^2}{2\sigma^2})
+\end{equation}
+\bigbreak
 
-For fitting grain size distribution we used genetic algorithm. In order to find best conditions of algorithm convergence we implemented several variants for crossover and mutation operator. Especially for crossover we have one-point, two-point and uniform crossover. First and second variants just straightforward classcial implementation of the operator. While uniform crossover is kind of nonstandard variant where point-to-point exchange rule follow random distribution. In other words, we take one point from first individual and randomly exchange with random point from the second individual. While in one- and two-point crossover we exchange points according to the virtual distance between  them. Particularly, we exchange point if they are close to each other. You can see this mapping on Figure \ref{mappingindividuals}.
+As one can see there are only 2 parameters that can influence distribution shape $ \sigma $ and $ \mu $. Environmental characteristics can change these 2 parameters and impact on grain size distribution. Of course, there are plenty other types of grain size distribution like bimodal lognormal distribution or uniform distribution. But in general, type of distribution does not affect to the research made in the current work and this is why just simple lognormal distribution is considered. Moreover \ref{lognormal} is used as a fitting function for the grain size distribution in overwhelming majority of scientific papers regarding polycrystalline structures \cite{shen15, liu14}.
 
-Here on the figure blue colored dots are points of first individual and red ones are of the second individual. We are making pairs of points from first and second individual according to the shortest distance between them. Green lines show which points we chose for pairing. As you can see in each case pairs are made between closest points.
+The reason why one can be interested in the grain size distribution is that this polycrystal matter description have direct effect to the mechanical and electromagnetic properties of the polycrystalline structure. And very often just knowledge of an average grain size cannot give us specific parameters of the material. In research about effect of grain size distribution on mechanical properties \cite{terada10} one can find dependency of yielding on the grain size distribution. In the paper annealed aluminum is considered. Depending on annealing temperature and lubrication authors obtained different grain size distributions and therefore different stress-strain dependency hence different yielding, though average grain size is the same for all specimen.
+
+Grain size distribution can be expressed as a dependency of appearing frequency of the grain size. But grain size can be interpreted in many different values. In paper one can find grain size as volume of grain, area of the surface of the grain, simple area in case of films (2D nano-objects) or grain diameter (sometimes radius). In this work diameter of a grain is chosen as a meause for the distribution. Moreover to make all evolutions dimensionless normalized grain size is used. Normalizing is made by dividing grain diameter with average grain diameter across all grains of the material. 
+
+As an aim for the given work is to build some structure close to the given distribution (unimodal lognormal in this case) one need to become familiar with popular methods of achieving some particular distributions.
+
+Monodispersive grain size model \ref{wang96} implies attempt to simulate polycrystall by identically-shaped rhombohedral grains. The main purpose of such simulation just research on some boundary effects. Of course such a model does not reflex the real structure.
+
+Poisson–Voronoi tessellation \ref{wear86} and Laguerre–Voronoi tessellation \ref{fan04} models are improvment for the classical Voronoi tessellation. These methods allow to fit some given distribution directly to the tessellation generation process. The methods are extremely fast compared to genetic algorithm described below. There is a problem, one obtains distribution similar to the reference distribution but the distribution not close enough to be able to say about dependency of particular distribution and material properties. However these approaches can be used as an extremely good first approximation for genetic algorithm.
+
+Classical Voronoi tessellation backed by genetic algorithm comprehensive and relatively modern method for polycrystalline structure generation. It is used here in work and will be discussed in detail below.
+
+Because of simplicity of implementation, low resource demanding, relatively fast computation and a few other advantages of the genetic algorithm method it was chosen as the only method for the generation not only grain size distribution but also orientation distribution and first level of relaxation of the structure. 
+
+\subsection{Genetic algorithm for the grain size distribution}
+
+There are several key elements and terms needed to define before implementation of genetic algorithm (GA). First of all when one refer to the GA it is needed to understand what is individual for the current task. In case of current work one deals with the Voronoi tessellation. Voronoi tessellation, in its turn, deals with a set of 3D points in the space so called seeds or generators. Thus the object that holds these seeds will be considered as an individual for the task. Remember that individual represents a solution for the given problem and in case of current research the right individual will generate correct polycrystalline structure hence solve the given task.
+
+The set of individuals is called population. The size of population is the number of individuals in the set. Population in some fixed time is called generation. The first generation influence strictly on the speed of GA's convergence. And not only speed but also problem of stucking in local minima also depends on initial population. Therefore strategy regarding forming initial generation can significantly impove GA. In this work uniform i.e. random generation of individuals is chosen. It helps to cover space of solutions independently and bypass local traps. Of course, the size of population is also important for good peformance. But this parameter will be chosen later based on calculation experiments.
+
+Another crucial term of GA is genome. Genome consists of genes and genes reflects some properties of the individual. In this work each 3D seed is considered as gene and the whole set of seeds for given individual is a genome. So, all further manipulations in GA will be done on set of seeds.
+
+In order to be able to manipulate genes one needs to encode them, convert from genotype to so called phenotype. It was chosen real number encoding for the seeds coordinates because it is natural and convinient representation of the 3D points. Each point is represented by set of 3 real numbers: x, y, z coordinate of corresponding 3D point. The whole genotype is kind of 2 dimensional array. First level of array has size of number of individuals. The inner level has size 3 - the number of coordinates. Thereby there is 3*N sized array representing an individual.
+
+The fitness is characteristic of individual showing the approximation of indvidual's phenotype to the objective function. It is another important term that has to be defined. Instead of fitness calculation it might be calculated inverse value so called fitness penalty. It shows the same, how far or close the individual's phenotype to the defined function by taking some difference between expected and current values. In this work fitness penalty calculated by formula \cite{shen15}:
+
+\begin{equation} \label{penalty}
+W^2 = \frac{1}{N} \sum_{i=1}^{N} [P_r(d_i) - P(d_i)]^2
+\end{equation}
+\bigbreak
  
+where N - number of points where penalty is calculated, $P_r$ is size-distribution of individual, P is expected size-distribution (fitting function), $d_i$ is point where penalty is calculated.
+
+The size-distribution of individual is constructed by dividing whole interval of possible grain sizes into equal-distant subintervals - bins. For each bin number of grains with size within this interval is calculated. This amount of grains is divided by total number of grains in individual to obtain normalized frequency. Hence, N is the number of bins on which the whole interval is divided.
+
+The expected size-distribution in this study is lognormal distribution. Each point where value of distribution is calculated is the center of the bin.
+
+The formula \ref{penalty} was chosen for the reason of fast convergence of GA with such a penalty function compared to several other meausers \cite{shen15}. Hence, convergence of GA in context of penalty function is tendency of penalty function's value to zero.
+
+Before moving to the discussion about GA operators it is needed to mention about \textit{\textbf{breeding}} and new population \textit{\textbf{selection}} strategies that are used in this work.
+
+\textit{\textbf{Breeding}} is the process of generation of new population candidates. It can be done by many different ways but in this work crossover and mutation operators are used for this purpose. After obtaining initial population the cycle runs to obtain all further generations. In this cycle successively crossover and mutation are applied. This gives candidates for the new generation. New candidates are mixed in common pool with the current population. The new population is selected based on individuals' fitness penalty. Best individuals go to the next generation and the process repeats until \textit{\textbf{stop criteria}} is reached.
+
+Described breeding strategy was selected because of its simplicity and relatively ease of implementation. Furthermore it is classical scheme for the GA. Described selection strategy was chosen for the reason of guarantee of improvement of population from generation to generation.
+
+As was mentioned, two classical operators are presented in this implementation of GA for size distribution. \textit{\textbf{Crossover}} operator is an operator allowing to mix up genomes of the individuals (parents) with the same analogy as crossing within species in nature. \textit{\textbf{Mutation}} operator is an operator allowing to generate new genomes (bring new information to the population) by changing somehow some part of genomes in individual.
+
+Crossover operator can be of different implementations but all implementations include two main elements: individual selection and crossover procedure. It worths to mention, that selection of individual for crossover and selection individuals for a new generation are absolutely different operations.
+
+Classical selection for crossover roulette wheel selection is not good choice for GA in current situation. Roulette wheel selection is very noisy and the rate of evolution strictly depends on the variance of population fitnesses. Another selection is random selection it is even more disruptive than roulette wheel and therefore it is also not acceptable. Tournament selection is the best variant for the current task. Competetion between individuals and random selection of individuals for the competitions bring selection pressure, which drives GA to get better fitness for the next generation. Finally, tournament selection was chosen for the GA implementation.
+
+Crossover procedure consists of two parts: cross site random selection and swapping genes between individuals following the cross site. Cross site selection might be one-, two- or multi-point. In this work it was used one- and two-points crossover because of it simplicity in implementation and good influence on the evolution rate. Uniform crossover is also implemented for diversity purpose and for ability to check how crossover operator impact on evolution rate and convergence of GA.
+
+In case of Voronoi tessellation's seeds it is necessary to define how evalute cross site selection. The seeds are 3D points in the space and therefore one can determine cross site as a plane dividing individual's volume into two parts in case of one-point crossover. In case of two-point crossover one needs 2 cross section planes and so forth for multi-point crossover. One-point crossover is selected as an operator for the current study therefore it is needed to find only one cross section plane. But the problem that to find such a plane you need to take into account problem of dividing individual's volume to the parts with the same number of particles (seeds). When you divide 2 volumes with randomly located seeds there is not guarantee that your division will be successful and corresponding parts of 2 individuals will contain equal amount of seeds. Even when one will try to adjust the plane to make division useful (bring it to such a condition that respective parts of individuals have the same amount of particles) and change the angle and/or shift of the plane it is much more probable that one will fail in such refinement (see Figure \ref{faildivision}).
+
+To avoid problem with planes seed-to-seed mapping approach was invented. Seed-to-seed mapping is some assosiation between seeds of one individual with seeds of another individual. The association for this study is made based on distance between seeds of two individuals. The distance was calculated after overlaying two sets of seeds in one volume. It's calculated only between seeds from different individuals. Example of such association is on Figure \ref{mappingindividuals}.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=3.0in]{cubes_cross_section}
+    \caption{Cross section plane very rarely divide individuals' volume into parts with equal amount of seeds}
+    \label{faildivision}
+\end{figure}
+
 \begin{figure}
     \centering
     \includegraphics[width=3.0in]{individuals_map}
-    \caption{Mapping of two individuals' points}
+    \caption{Mapping of two individuals' points. Blue colored dots are points of first individual and red ones are of the second individual. Pairs are made of points from first and second individual according to the shortest distance between them. Green lines show which points are chosen for pairing. Each case of pairs is made between closest points.}
     \label{mappingindividuals}
 \end{figure}
 
-For the mutation operator we implemented variant with different distribution for point shifting value. Especially we implemented and tested two kind of distribution: uniform and normal. The maximum aplitude for the shifting is adopting to the system under consideration. We compute average volume for the one particle by dividing the whole simulation box by the amount of particles. After we take to cube root of this volume and obtain the adopted shifting maximum amplitute for the mutation operator.
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{3d_map}
+    \caption{Free form volume used for crossover. One type colored dots are seeds from one individual, another type colored - from another individual. Light gray lines are pairing of seeds. Blue line is free form cross site.}
+    \label{3d_map}
+\end{figure}
 
-Another variant for the mutation operator it is just reinitialization of the given point. 
+After obtaining such a map between seeds it is easy to choose cross site for crossover. But now cross site is not a cross section plane but it is kind of free form surface that wrap some equal amount of seeds in two individuals. Equality keeps because of calculated mapping between seeds (see Figure \ref{3d_map}). One needs just choose randomly initial point for crossover. Then it is necessary to choose some defined number neighboring seeds in one individual and interchange seeds between individuals according the mapping. Of course such a mapping is not unique because one can have cases with equal distances between one seeds from one individual and several seeds from another individual. This problem is solved just by selecting random neighboring seed with equal distance and if seed is already used in map it skiped and new nearest seed is searching (with exclusion of aready busy, paired seeds).
 
-If we generalize the whole algorithm we implemented we can highlight 4 parameters that impact on the convergence and convergence speed of the genetic algorithm. They are crossover operator type, mutation distribution, mutation probability and population size.
+Having such a mapping between seeds it is possible to perform two-point crossover. It is needed just repeat procedure for one-point crossover two times on the same parents.
 
-By changing and variating the set of these parameters we obtain particular configuration of the algorithm. Our goal is to find the optimal configuation when the algorithm will converge and will do it quickly enough.
+Uniform or random crossover is made by random choose of points fo the offspring either from one individual or from another one.
 
-In order to obtain the optimal configuration we chose some dicrete values for population size and mutation probability and assemble all possible configurations from these values. For mutation probability we considered values 0.8, 0.2, 0.05, 0.01. For population size we considered 10, 40, 100. For operators variants are already discrete. Namely, for crossover operator: one-point, two-point and uniform and for mutation: uniform, normal, reinitialization. All these configurations are accepted by the bash script as a parameter that makes testing of all possible configurations easy enough.
+So far, the discussion about crossover operator was in condition that one deals only with 2 individuals for each turn. But this operator can be not only for two individuals (parents) but also for three parents and even more parents. But this type of operators as many other variants like Precedence Preservative Crossover, Partially Matched Crossover etc., but all of them are more complicated in implementation and very hardly predictable. That managed choice for current implementation.
 
-For each particular configuration we run 48 instances due to our idea to find the mean value and standard deviation for each considered point.
+Mutation operator heps to bring new information to the generation. It works similarly to mutation in the nature. Individual has genes and mutation operator changes some of the genes and thereby help to bypass local minimas by extending search space. Number of genes that is changed due to mutation defined by mutation probability.
 
-For aggregation data from each configuration runs and finding mean value and standard deviation we used python pandas module.
+Mutation operator can flip bits if genome encoded by binary string. But in case of 3D seeds it is not applicable. Interganging of genes when one part of genome interganged with another part of the same genome is also not acceptable because it narrows diversity and can negatively affect on evolution rate. The same results come from reversing but it is valid only for bit encoding of genome. The best choice for current study is just slight change of coordinates of seeds. Character of coordinate's changing produce parameters that will help to adjust operator behavior to the given task. These parameters will be discussed later. Another possibility to implement mutation is just reinitialization of seed. How many seeds will be reinitialized depends on mutation probability.
 
-The results for best, worst and average penalty for different configuration are presented on Figures \ref{crossovercomp1}, \ref{crossovercomp2}, \ref{crossovercomp3}, \ref{mutationprobcomp1}, \ref{mutationprobcomp2}, \ref{mutationprobcomp3}.
+As was mentioned mutation operator was implemented as an operator that just shifts coordinates of seed with some given probability. It is important to define maximum shift value that can be performed during mutation. One can take some fixed value for the shifting. This approach has a disadvantage because one needs to change the fixed shifting any time when sizes of simulation volume change. Another approach to bind shifting to the dimensions of volume so it would be automaticaly adjusted to any volume. In this work adjustable approach is chosen. It is done by using average volume per seed. This value is pretty simple:
 
+\begin{equation} \label{avgvolume}
+V_{average} = \frac{V}{N}
+\end{equation}
+\bigbreak
+
+where V is volume, N is number of seeds.
+
+Average volume can be used for calculating shifting by taking cubic root from its value, i.e.:
+
+\begin{equation} \label{shift}
+d = \sqrt[3]{V_{average}}
+\end{equation}
+\bigbreak
+
+This value is auto-adjusting to the given volume and you have guarantee that you will not go far out of volume when you perform mutation. It is important because big amplitude of shifting can cause of not covergence of GA.
+ 
+If one has all necessary elements for GA it is important what is \textit{\textbf{stop criteria}} for GA. When it should stop its evoluations. There are several classical conditions for GA stop. 
+
+- \textit{\textbf{Maximum generations}} - GA stops when specified number of generation was calculated. It is useful criteria but in this work modifed version of this criteria is used. 
+
+- \textit{\textbf{Maximum evoluation of fitness function}} - GA stops when one calculated specified number of fitness function calculations. Fitness is calculated for each individual, so more individuals you have more fitness you calcualted and less runs (generation) you have.
+
+- \textit{\textbf{Elapsed time}} - GA ends when a specified time has elapsed.
+Note: usually If the maximum number of generation has been exceeded before the specified elapsed time limit, the process will end.
+
+- \textit{\textbf{Penalty/Fitness threshold}} - GA stops when penalty of fitness value is less or more than some specified threshold.
+
+- And others criteria which were not considered here.
+
+Maximum evoluation of fitness and Penalty threshold are two criteria which were used in current study to stop GA. The first criteria was chosen because of convinient obtaining results for comparing two or more configuration of GA. Comparing is easy when one can assess the same amount of calculations for different configuration of GA, other ways one will obtain biased results that do not reflect real situation. And the second parameter is more practical in sense of application of obtained structure to the simulation. There is some error in distribution that does not affect to the characteristic of material and there is no sense to continue to refine the result and run GA further. The penalty that is used for termination is taken for best individual.
+
+The evolution process depends on many factors. The main parameters that influence convergence and convergence rate are \textit{\textbf{population size}}, \textit{\textbf{crossover probability}} and \textit{\textbf{mutation probability}}.
+
+Mutation probability parameter explained above, it is how ofter mutation will be applied to the offspring. Crossover probability is a parameter describing how often crossover will be executed. Because of offspring selection strategy in this study there is no mechanism to manage this parameter. Population size is amount of individual in the population. This parameter is very important and will be tested for the best value for algorithm evoluation. When you have big number of individuals you obtain best observe of solution space and therefore you have minimum probability to trap into local minima. But big amount means a lot of calculations, huge computational and time demands. Time depends on population size not lineary but in O(nlogn) manner and big size can leads to big time. In case of little size of population one can perform calculations very fast but easily trap into local minima \ref{gold06}.
+
+Besides these classical GA parameters each implementation can have many other adjustable parameters. Further discussion about parameters of current implementation will be presented.
+
+As was mentioned in current study crossover probability has no direct entity and therefore it is not adjustable. But two rest parameters are separated and can be adjusted. Besides these two implemenation can highlight 10 more parameters. Some of them were tested and some of them were extracted and remained just for further study outside of the current work.
+
+\textit{\textbf{Crossover operator type}} - is different implementation of crossover operator. In this work there are one-, two-point operators and uniform operator. It is needed to understand which of them is more aplicable for the current task.
+
+\textit{\textbf{Mutation operator type}} - is different implementation of mutation operator. In this work there are uniform distributed, normal distributed mutation and reinitialization. Uniform distributed mutation means that shift of coordinates selected in range (0, d), where d is from \ref{shift}, uniformly. Normal distributed mutation means that shift selected from the same range but according to the normal distribution. And reinitialization mutation means that instead of shifting just total reinitialization of seed applies. It is also needed to understand which of them is more aplicable for the current task.
+
+\textit{\textbf{Factor for mutation amplitude}} - is a factor for \ref{shift}. The purpose to understand how such a factor impact to GA. But in current study it is outside of scope and was remained just for further research.
+
+\textit{\textbf{Minimum and maximum number for crossover}} - is a maximum and minimum number of seeds that are used for crossover operation. The these numbers cannot exceed the total number of seeds in individual. And numbers cannot be negative.
+
+\textit{\textbf{Set of parameters for flexible GA}} - flexible GA is term intoduced by author to name process when mutation probability and population size can change during evoluation in order to improve convergence characteristics. This set includes so called \textit{\textbf{thresholds}}. This is number of runs of GA after which mutation probability and population sizes are changed. For now algorithm has only 2 thresholds. After each threshold mutation probability changes by \textit{\textbf{threshold mutation factor}} - multiplicative factor for probability. And population size changes by unique for each threshold \textit{\textbf{threshold population factors}}. They are two because of two thresholds. The idea came from approach in paper "Constructing three-dimensional (3D) nanocrystalline models of Li4SiO4 for numerical modeling and simulation" \ref{shen15}.
+
+In order to find optimal set of parameters series of computation experiments are done. Configuration is a set of parameters for GA. So, aim is to find optimal configuration. 
+
+To obtain trustworthy results for each configuration 48 runs are done. 48 is not a random number. It was choosed due to specification of supercomputer that was used for all calculations. The supercomputer was kindly provided by Gdansk University of Technology.
+
+Because there are 12 parameters in total it is difficult to optimize them all together. This is why decision of study parameters by pairs came to the work. 
+
+The first pair of parameters is mutation operator type and crossover operator type. They were study in order to find best combination of operators. During study all other parameters are fixed. Because there are 3 types of mutation operator and 3 types of crossover operator to total number of configuration for this pair is 9. The population size is taken equal to 70, mutation probability - 0.01, shift factor - 1.0, from and to number for crossover - 10 and 100 respectively, thresholds are 500 and 1000, mutation factor - 10, threshold population factors 5 and 9. These are default parameters for all computations, i.e. if parameter is not in pair that is undergoing study then default value is used.
+
+All computational experiments produce data for best, worst and average fitness penalty. Standard deviation for each fitness type is also calculated. Comparison for configuration is made based on best fitness penalty (lowest one). For the best combination in pair best, worst and average penalties are depicted.
+
+The result for mutation operator type and crossover operator type pair is presented on Figure \ref{operatorcomparison}. First of all it is needed to explain meaning of the graphs' labels. Label encode the full parameter set i.e. configuration of GA. Each parameter separated by "\_" sign. The order of set in label is fixed: crossover operator type, mutation operator type, mutation probability, population size, factor for mutation amplitude, "from" and "to" numbers for crossover, first and second threshold numbers, threshold factor for mutation, first and second threshold factors for population size. But labels on Figure Figure \ref{operatorcomparison} are shortened to show only first 4 parameters. It is made because all other parameters are fixed and more convinient to show short labels.
+
+As one can see on Figure \ref{operatorcomparison} all lines with uniform crossover operator (last 3 lines in label list) have bad velocity of convergence in the very beginning and in the steady state they show worse results than other operators. It is a reason why uniform crossover operator has be declined for further consideration.
+
+Before going further in rest operators consideration it is needed to mention that on Figure \ref{operatorcomparisonerr} one can see the same lines as on Figure \ref{operatorcomparison} but drawn only as error bars. In the beginning of graphs one can see that all lines begin in with more or less the same point with considering error intervals. It proves that 48 runs is enough to get reliable statistic for current task. It is also worth to mention that error decreases with increase of iterations.
+
+On Figure \ref{operatorcomparisonzoom} it is possible to see behavior of lines from Figure \ref{operatorcomparison} in detail in steady state. Now it is possible to notice that the best line is "1p\_uniform\_0.01\_70\_..." though line "1p\_normal\_0.01\_70\_..." is comparable. It might be, one can adjust parameters of normal distribution to obtain better results but for our research it is enough to use uniform mutation operator for simplicity reason.
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{crossover_comparison_md_uniform}
-    \caption{Comparison of crossover operators while mutation distribution is uniform}
-    \label{crossovercomp1}
+    \includegraphics[width=5.0in]{operators_comparison}
+    \caption{Comparison of crossover operators type with mutation operator type}
+    \label{operatorcomparison}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{crossover_comparison_md_normal}
-    \caption{Comparison of crossover operators while mutation distribution is normal}
-    \label{crossovercomp2}
+    \includegraphics[width=5.0in]{operators_comparison_err}
+    \caption{Comparison of crossover operators type with mutation operator type, standard deviation.}
+    \label{operatorcomparisonerr}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{crossover_comparison_md_reinit}
-    \caption{Comparison of crossover operators while mutation is just reinitialization}
-    \label{crossovercomp3}
+    \includegraphics[width=5.0in]{operators_comparison_zoom}
+    \caption{Comparison of crossover operators type with mutation operator type, zoomed to the end interval of graph.}
+    \label{operatorcomparisonzoom}
+\end{figure}
+
+The next pair of parameters is mutation probability and population size. This pair is much more complicated because now there are no discrete values for parameters and one needs to find optimal value for continuous space. In frame of current study the search of optimal solution will be quite primitive and more complitated methods remained for further research. The search strategy will be done in following manner. For each parameter of pair some discrete values are chosen. For each value among chosen discrete parameters computations are performed. From obtained data fitting function is founded and all other comparison of parameters made based on fitted function.
+
+Just for visual comparison Figure \ref{mppscomparison001}, Figure \ref{mppscomparison01}, Figure \ref{mppscomparison08} show dependency of mutation probability on population size. Figure \ref{mppscomparison001} show fixed mutation probability equal to 0.01 and different population size, Figure \ref{mppscomparison01} - mutation probability 0.1, Figure \ref{mppscomparison08} - mutation probability 0.8. It is only part of studied data and just for visualization of dependency.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{mppscomparison001}
+    \caption{Comparison of fixed mutation probability 0.01 and different population size}
+    \label{mppscomparison001}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{mutation_probability_comparison_population_10}
-    \caption{Comparison of mutation probability while population size is 10 individuals}
-    \label{mutationprobcomp1}
+    \includegraphics[width=5.0in]{mppscomparison01}
+    \caption{Comparison of fixed mutation probability 0.1 and different population size}
+    \label{mppscomparison01}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{mutation_probability_comparison_population_50}
-    \caption{Comparison of mutation probability while population size is 50 individuals}
-    \label{mutationprobcomp2}
+    \includegraphics[width=5.0in]{mppscomparison08}
+    \caption{Comparison of fixed mutation probability 0.8 and different population size}
+    \label{mppscomparison08}
+\end{figure}
+
+For quantative comparison GA with different values of mutation probabilty and population size and finding of optimal combintation it is needed to fit data to some function. After series of experiments it was decided to divide data to 2 parts and fit these 2 parts with different functions. First part is in iterval [0, 3500] and the second part from 3500 till the end of data. For the first interval the fitting function is: 
+
+\begin{equation} \label{sig1}
+sig_1(x) = \frac{a}{b+x^d}+c
+\end{equation}
+\bigbreak
+
+And for the second interval is:
+
+\begin{equation} \label{sig2}
+sig_2(x) = \frac{a}{b+x}+c
+\end{equation}
+\bigbreak
+
+So, the task is to find a, b, c, d parameters for the above functions. The results after fitting  one can find in appendix and here just the best result is presented. But before presenting the result it is needed to introduce how one can compare different obtained functions and say that one is better then another for current task. The best solutions is present the measure for functions. The idea, that first interval shows how fast is convergence and the second interval shows if configuration converges, was accepted. For measuring speed of convergence the average velocity on interval was considered:
+
+\begin{equation} \label{mes1}
+mes_1(sig_1(x)) = \frac{sig_1(x_{start}) - sig_1({x_{end}})}{3500}
+\end{equation}
+\bigbreak
+ 
+where $x_{start}$ is first point of interval $x_{end}$ is end point of interval, 3500 was chosen because it is length of the interval.
+
+And for the second interval just parameter c was condered is the measure because it is limit point for Formula \ref{sig2} when $x \rightarrow \infty$:
+
+\begin{equation} \label{mes2}
+mes_2(sig_2(x)) = \lim_{x\to\infty} sig_2(x) = \lim_{x\to\infty}  \frac{a}{b+x}+c = c
+\end{equation}
+\bigbreak
+
+The surface showing dependency of first measure on mutation probability and population size is shown on Figure \ref{speedsurface} and dependency of GA limit value on the same parameters is shown on Figure \ref{limitsurface}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{speed_surface}
+    \caption{Average evolution rate dependency on mutation probability and population size}
+    \label{speedsurface}
 \end{figure}
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{mutation_probability_comparison_population_100}
-    \caption{Comparison of mutation probability while population size is 100 individuals}
-    \label{mutationprobcomp3}
+    \includegraphics[width=5.0in]{limit_surface}
+    \caption{Limit of convergence dependency on mutation probability and population size}
+    \label{limitsurface}
 \end{figure}
+
+As one can see evolution rate is higher on small populations. And limit is lower (better convergence) on big populations. The best result according to the first measure showed configuration with mutation probability - 0.8 and population size - 10. It means that with such a configuration GA converges faster, at least in the very beginning of algorithm run. But for the best convergence value the best configuration is mutation probability - 0.01 and population size - 90, i.e. the configuration has lower limit. Such different behavior in different configuration prompted to extend method used in one of mentioned papers \ref{
+shen15} and use it for the current task.
+
+The idea of thresholds was a decision how to combine results for the different configuration. The meaning of the approach is change mutation probablity and population size when algorithm reach number of runs equal to threshold. This idea can be extended to many number of thresholds but in this work it was limited by only two thresholds.
+
+First step of optimization of thresholds was done by changing the first threshold and second thresholds but keeping difference between them the same and equal to 100 runs. The result is shown on Figure \ref{threshold1comparison}. As one can notice while first threshold is equal to 200 the GA has best result in penalty. Notice, labels again shortened. But now they are shortened from both sides start and end. The third shown parameter in the labels is first threshold while fourth - second threshold.
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{best_configuration}
-    \caption{The best configuration: 50 individuals, 0.01 mutation probability, two point crossover, uniform distribution for mutation}
-    \label{bestconfiguration}
+    \includegraphics[width=5.0in]{threshold1_comparison}
+    \caption{Comparison of different values of first threshold while second threshold is fixed}
+    \label{threshold1comparison}
 \end{figure}
+
+Second step of optimization of thresholds was done by fixing first threshold equal to 200 (see previous result) and changing difference between thresholds. The result is shown on Figure \ref{threshold2comparison}. As one can notice that results are very similar to each other, but in this work threshold equal to 500 was chosen.
 
 \begin{figure}
     \centering
-    \includegraphics[width=5.0in]{first_last_comparison}
-    \caption{The result of genetic algorithm work after 3000 steps}
-    \label{firstlastcomp}
+    \includegraphics[width=5.0in]{threshold2_comparison}
+    \caption{Comparison of different values of second threshold while first threshold is fixed and equal to 200}
+    \label{threshold2comparison}
 \end{figure}
 
-On these figures there are presented 3 lines: the best individual's penalty, the worst individual's penalty and the average penalty for the number of evaluating of penalty function.
+Of course these threshold parameters could be optimized more seriously but it goes away from current work. The rest parameters remained as it was declared previously for default values.
 
-I permormed optimal configuration finding strategy in following manner. As we have 4 parameters for each configuration I divided this set to two subsets with two paremeters in each. Then in each subset I run calculations with different parameters from the set while parameters outside set were fixed. E.g. in \ref{crossovercomp1} we comparing crossover operators while mutation is uniform and population size and mutation probability are fixed. Similarly for \ref{crossovercomp1} with except of mutation operator. Here this operator has normal distribution, but all other parameters have the same set of values. 
+After having the optimal configuration 1000 of session on such configuration were run in order to obtain the best fitted Voronoi structure and statistics for the configuration. The result of fitting is presented on Figure \iffalse \ref{lastconvergence} \fi  for convergence and on Figure \iffalse \ref{lastresult} \fi for comparing size distribution before GA application and after. During run penalty reduced 1000 times compared to the initial distribution.
+On Figure \iffalse \ref{lastconvergence} \fi 3 lines are presented: the best individual's penalty, the worst individual's penalty and the average penalty for the number of evaluating of penalty function.
 
-On the labeles above the graphs you can see titles of lines presented on the charts. Titles encode the configuration of the current line. For example "2p\textunderscore uniform\textunderscore 0.1\textunderscore 20 worst" means we have two-point crossover operator, uniform distribution for mutation, 0.1 mutation probability and 20 population size. Word "worst" means that all values presented for the worst individual in the current population. Besides "worst" we also have "best" and "avg". "Best" means values for the best individual and "avg" means average values for the generation.
-
-After permorming a lot of calculations we came to conclusion that "2p\textunderscore uniform\textunderscore 0.01\textunderscore 50" is the best configuration in terms of convergence.
 
 \subsection{Building the Voronoi tessellation fitting the given grain orientation distribution}
 
-For reaching selected grain orientation distribution we also used genetic algorithm. But it is supposed to use this optimization only after reaching grain size distribution because in case of grain orientation we do not change tessellation but rather we change only orientation of the grains.
+Firsty it is needed to understand why grain orientation distribution is so important. Different orientation of neighboring grains leads to the grain boundary appearing. Boundary in its turn is very important because:
 
-Each orientation is represented by Euler angles. Although we have orientation for each grain we are interested in relative orientation between grains. We introduce this orientation as a difference between orientations of two selected grains. It can be imagined as angles needed to rotate first orientation in order to obtain the second orientation and vise versa.
+- Grain boundary vary significantly in their characteristics (mobility, energy, chemistry)
 
-In particular we use the same crossover operators for choose which points we have to exchange but instead of exchanging points theirselves we exchange their orientations and leave points positions intact. Therefore we need only one individual of tessellation and many configuration of orientation.
+- Many properties of material depends on the nature of grain boundaries
 
-For mutation operator we change slightly the Euler angles of the grain. We consider only one octant with angles from 0 to pi/2 because we are dealing only with cubic lattice in this work. Latter on outside of this work we will work with more complex lattices.
+- Material can have good or bad mechanical, corrosion properties depending on the type of grain boundaries
+  
+One of the popular method to represent the grain distribution is to calculate distribution of misorientation angels between neighboring grains. Given two orientations (grains, crystals), the misorientation is the transformation required to transform tensor quantities (vectors, stress, strain) from one set of crystal axes to the other set. For cubic lattice (in current study comparison will be for experimental data for FCC materials) there are 24 variants of rotation (transformation) that can transform one grain to another. But for misorientation distribution we need only lowest angle of misorientation. To calculate misorientation one need to know Euler angles of neighboring grains. For each grain with Euler angles [$\phi_1, \Phi, \phi_2$] it is needed to calculate orientation matrix:
 
-We can think about two algorithms for grain sizes and grain orientation as a similar problems with the similar properties. For example, when we change position of one point in grain size algorithm we change sizes of current cell and all neighboring cells. The same for grain orientation algorithm. When we change orientation for one cell we change all relative orientation around particular grain.
+\begin{equation} \label{orientmatrix}
+g = \begin{bmatrix}
+    c\phi_1c\phi_2 - s\phi_1s\phi_2c\Phi & s\phi_1c\phi_2 - c\phi_1s\phi_2c\Phi & s\phi_2c\Phi \\
+    -c\phi_1s\phi_2 - s\phi_1c\phi_2c\Phi & -s\phi_1s\phi_2 - c\phi_1c\phi_2c\Phi & c\phi_2s\Phi \\
+    s\phi_1s\Phi & -c\phi_2s\Phi & c\Phi
+\end{bmatrix}
+\end{equation}
+\bigbreak
 
-For grain orientation algorithm we also have the set of possible parameters that influence on the convergence. They are the same as for grain size algorithm. We also have to find optimal configuration for the algorithm and this is why we performed the same procedure of calling script that variates all possible configuration. After running all configuration several times (48 times) we in the same way calculate mean value and standard deviation. Here are results of worst, best and tree medium configurations:
+where c is cos, s is sin.
 
-\[figures representing grain orientation algorithm results\]
+The misorientation matrix is then:
+
+\begin{equation} \label{mismatrix}
+\Delta g_{1,2} = g_1A_{rot_i}g^{-1}_2
+\end{equation}
+\bigbreak
+
+where $g_1$ is orientation matrix for the first grain, $g_2$ is orientation matrix for the second grain and $g^{-1}_2$ is invert matrix for $g_2$, $A_{rot_i}$ is i-th rotation matrix (there are 24 of them, see appendix).
+
+And from misorientation matrix it is possible to calculate misorientation angle:
+
+\begin{equation} \label{misangle}
+cos\Theta = (trace(\Delta g_{1,2}) - 1)/2
+\end{equation}
+\bigbreak
+
+From 24 matrices one obtain 24 angles, but only smallest is valid for distribution.
+
+There are many different misorientation angle distributions. The shape of distributions for different type of lattice can be find in Hans Grimmer's paper \cite{hans79}. But currently in the work just cubic lattice is beeing considered. This is why Mackenzie distribution \cite{mack58} is taken as a primary distribution for this study. It does not mean only this distribution is possible to reach in frame of current work. The framework is able to fit any user defined distribution. But Mackenzie distribution is taken as a reference for initial research. 
+
+Default random grain orientation distribution is described by Mackenzie distribution. This is why when one generate grain orientation randomly and even pseudo-randomly one obtain distribution very close the Mackenzie distribution. In order to check if implemented algorith works with any kind of initial grain orientation distributions, the initial orientations selection algorithm was changed. Initial orientation selection is based on generating Euler angles within [0\degree, 9\degree] interval. This algorithm generates texture in simulated structure. The texture for polycrytalline is orientation distribution with some prefered direction.
+
+
+
+[ToDo] show comparison of different pairs and configs
+
+[ToDo] show result for best configuration
+
 
 \section{Filling tessellation with particles (atoms)}
 
-After obtaining fitted Voronoi tessellation we have to fill it with the atoms. The filling should correspond to the reached grain orientation distribution. In order to do this we generate lattice with given lattice constant arround the grain point with size exceeding grain size twice to cover all possible artifacts during rotation. After that we rotate generated set of atoms by the euler angles that we got during grain orientation optimization. Now we cut all redundant atoms that lie outside of the considered grain and so we have filled grain of the polycrystalline.
+After getting correct container for polycrystalline and getting orientations of grains (in Euler angles) one can fill the container by atoms. Atoms should follow specified lattice and lattice has to be defined by base atoms. In general any of possible lattices can be defined in code but in this work only cubic structures are considered.
 
-The only trick that we need during this generation is following the periodic condition of the system. This is why if we have grain touching the boundary of the simulation box we need to transfer atoms to the corresponding part of grain lying in the opposite side of the box.  
+The process of lattice generation is pretty simple. The grain's seed point is considered as a starting point for lattice generation. Atoms located in oX, oY, oZ directions starting from this point. The distance between starting point and last atoms in each directions is of diameter of the grain. After generating none-rotated lattice it is needed to rotate it according to the Euler angles obtained in previous step. It is done straightforward according to the defenition of Euler angles. 
+
+After rotation one need to remove excess atoms that stay outside of the grain volume. This procedure is done in this way: for all planes of grain coefficients of the plane equation are calculated $Ax + By + Cz = D$, for the seed point with coordinates $(x_1, y_1, z_1)$ signs for each plane of grain are calculated $Ax_1 + By_1 + Cz_1 - D$, now the process repeated for all atoms of generated lattice and even if one sign differs from the sign of seed then this atom lie outside of grain volume and one needs to remove it.
+
+It is important to notice that if the generated lattice will be moved in any axis by distance equal to lattice constant then we obtain absolutelly similar position of atoms (inside of grain because of periodicity of lattice) but we still get different position of we shift generatio by distance less then lattice constant. This feature will be used during first step of relaxation and this possible shifting is called \textit{\textbf{shifting vector}} in current study. So, finally for each grain one got 9 parameters: 3 coordinates of seed, 3 coordinates of shifting vector, 3 Euler angles.
+
+[ToDo] show one filled polycrystalline structure (colored grains)
 
 \section{Relaxation of atomic structure}
 
-The relaxation process in this work backed by minimization of whole energy by shifting the center of lattice generation for each grain and by removing some atoms on grains borders. Calculating of whole energy performed by LAMMPS module. For calculating energy we use many body potential \[the name and formula for potential\].
+[ToDo] say about energy minimization for the matter
 
-The process of generation center shifting is implemented again by using genetic algorithm. We generate randomly generation and for each individual calculate total energy. Crossover and mutation are implemented in similar way as it was for grain size genetic algorithm with the exception that we deal with center of generation and leave untouched the tessellation.
+[ToDo] say about potential used for total energy calculation
 
-After achieving optimal low energy we walk through border of each grain and try to remove redundunt atoms again in order to lower total energy.
+[ToDo] explain how works optimization of shifting vector of the grains
 
-If we found that structure is stable we run simulation in LAMMPS with chosen potential to finish the process of relaxation and hence by the end we obtain realistic polycrystalline structure.
+[ToDo] say that we use GA for shifting optimization. explain searching strategy for the optimal configuration
 
-\section{Results and discussion}
+[ToDo] show results for GA for shifting
 
-- describe how we did genetic algo for different configurations for sizes and orientations and show the common graph for all configurations
-- discuss about why is it so. why it works with these parameters
-- describe more detailed and with graphs the filling processs and discuss the results
-- descibe in detail relaxation process and show progress of total energy reduction
+[ToDo] say how to optimize energy by removing excess atoms
 
-\section{Methods}
+[ToDo] say about measure for bad atoms (bad atom ranging)
 
-- show block scheme of genetic algo for sizes and orientation
-- show block scheme for filling
-- show block scheme for relaxation
- 
-\section{Additional Information}
-
-???
+[ToDo] show results for atom removal optimization
 
 \section{Conclusion}
 
 
+
+\section{Acknowlegments}
+
+Financial support of the MathMods Erasmus Mundus program and especially prof. Bruno Rubino is gratefully acknowledged. Prof. Szymon Winczewski is aknowledged for his professional and careful supervision of this master thesis. M.Sc.Eng. Kamil Rybacki is aknowledged for his support in many issues during implementation of the software for the current research. Dr. eng. Karol Frydrych is acknowledged for suggestion how to calculate misorienation angle. Dr. Anton Pshenichnikov is aknowledged for suggestion about relaxation of the structure. Special acknowlegments for Gdansk University of Technology for providing access to the supercomputer.
+
+\section{Appendix}
+
+[ToDo] show genotype to phenotype encoding
+
+[ToDo] show block scheme of genetic algo for sizes and orientation
+
+[ToDo] show block scheme for filling
+
+[ToDo] show block scheme for relaxation
+
+[ToDo] give link to the repo
 
 \begin{thebibliography}{9}
 
@@ -272,6 +521,12 @@ If we found that structure is stable we run simulation in LAMMPS with chosen pot
   Sci. Rep. 5, 10698; doi: 10.1038/srep10698 
   2015
 
+\bibitem{terada10}
+  D Terada et al.
+  \textit{Effect of grain size distribution on mechanical properties of ultrafine grained Al severely deformed by ARB process and subsequently annealed}
+  2010 J. Phys.: Conf. Ser. 240 012111
+
+
 \bibitem{suzudo02}
   Suzudo T.  Kaburaki H. 
   \textit{An evolutional approach to the numerical construction of polycrystalline structures using the Voronoi tessellation}
@@ -287,6 +542,18 @@ If we found that structure is stable we run simulation in LAMMPS with chosen pot
   Antonio Rinaldi, Dusan Krajcinovic, Pedro Peralta, Ying-Cheng Lai
   \textit{Lattice models of polycrystalline microstructures: A quantitative approach}
   Mechanics of Materials 40 (2008) 17–36
+
+\bibitem{hans79}
+  Hans Grimmer
+  \textit{The distribution of disorientation angles if all relative orientations of neighbouring grains are equally probable}
+  Scripta Metallurgica
+Volume 13, Issue 2, February 1979, Pages 161-164
+
+\bibitem{mack58}
+  Mackenzie, J.K.
+  \textit{Second Paper on the Statistics Associated with the Random Disorientation of Cubes}
+  Biometrika 45,229.
+ (1958)
 
 \bibitem{kotak12}
   Jani Kotakoski and Jannik C. Meyer
@@ -353,6 +620,11 @@ Wiley, New York,
   MIT Press, Cambridge, MA
  1998
 
+\bibitem{gold06}
+  David E. Goldberg
+  \textit{Genetic Algorithms}
+  Pearson Education, 2006
+
 \bibitem{suwas14}
   S. Suwas and R. K. Ray
   \textit{Crystallographic Texture of Materials}
@@ -367,7 +639,5 @@ Wiley, New York,
 
 \end{thebibliography}
 
-
-\section{Acknowlegments}
 
 \end{document}

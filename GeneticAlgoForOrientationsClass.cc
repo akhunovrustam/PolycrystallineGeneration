@@ -15,19 +15,13 @@ GeneticAlgoForOrientationsClass::GeneticAlgoForOrientationsClass(int pop_size)
 	distribution = normal_distribution<double>(mutation_max_applitude_e / 2, mutation_max_applitude_e / 6);
 }
 
-double GeneticAlgoForOrientationsClass::original_distribution(string point)
+double GeneticAlgoForOrientationsClass::original_distribution(double point)
 {
-	double k = 1 / pow(penalty_steps, 3);
-
-	istringstream f(point.c_str());
-    string s;
-	getline(f, s, '|');
-	double alpha = stod(s);
-	getline(f, s, '|');
-	double beta = stod(s);
-	getline(f, s, '|');
-	double gamma = stod(s);
-	return k;
+	double orig;
+	if (point < M_PI/4)
+		orig = 2.0/15.0*(1-cos(point));
+	else orig = 2.0/15.0*(3*(sqrt(2)-1)*sin(point) - 2*(1-cos(point)));
+	return orig;
 }
 
 orient_unit* GeneticAlgoForOrientationsClass::relative_euler(container* con, orient_unit *abs_euler)
@@ -59,11 +53,83 @@ orient_unit* GeneticAlgoForOrientationsClass::relative_euler(container* con, ori
 			string signstr1 = sign_i.str();
 			for (int i = 0; i < population_size; i++)
 			{
+				double f1 = abs_euler[i][signstr].alpha;
+				double F = abs_euler[i][signstr].beta;
+				double f2 = abs_euler[i][signstr].gamma;
+				double ff1 = abs_euler[i][signstr10].alpha;
+				double FF = abs_euler[i][signstr10].beta;
+				double ff2 = abs_euler[i][signstr10].gamma;
+				
+				double m1[3][3];
+				double m2[3][3];
+				
+				m1[0][0] = cos(f1)*cos(f2) - sin(f1)*sin(f2)*cos(F);
+				m1[0][1] = sin(f1)*cos(f2) + cos(f1)*sin(f2)*cos(F);
+				m1[0][2] = sin(f2)*sin(F);
+				m1[1][0] = -cos(f1)*sin(f2) - sin(f1)*cos(f2)*cos(F);
+				m1[1][1] = -sin(f1)*sin(f2) + cos(f1)*cos(f2)*cos(F);
+				m1[1][2] = cos(f2)*sin(F);
+				m1[2][0] = sin(f1)*sin(F);
+				m1[2][1] = -cos(f1)*sin(F);
+				m1[2][2] = cos(F);
+				
+				m2[0][0] = cos(ff1)*cos(ff2) - sin(ff1)*sin(ff2)*cos(FF);
+				m2[0][1] = sin(ff1)*cos(ff2) + cos(ff1)*sin(ff2)*cos(FF);
+				m2[0][2] = sin(ff2)*sin(FF);
+				m2[1][0] = -cos(ff1)*sin(ff2) - sin(ff1)*cos(ff2)*cos(FF);
+				m2[1][1] = -sin(ff1)*sin(ff2) + cos(ff1)*cos(ff2)*cos(FF);
+				m2[1][2] = cos(ff2)*sin(FF);
+				m2[2][0] = sin(ff1)*sin(FF);
+				m2[2][1] = -cos(ff1)*sin(FF);
+				m2[2][2] = cos(FF);
+				
+				double det = m2[0][0]*m2[1][1]*m2[2][2] + m2[0][1]*m2[1][2]*m2[2][0]
+					+ m2[1][0]*m2[2][1]*m2[0][2] - m2[2][0]*m2[1][1]*m2[0][2] 
+					- m2[0][0]*m2[2][1]*m2[1][2] - m2[1][0]*m2[0][1]*m2[2][2];
+					
+				double inv[3][3];
+				inv[0][0] = (m2[1][1]*m2[2][2] - m2[1][2]*m2[2][1])/det;
+				inv[1][0] = -(m2[1][0]*m2[2][2] - m2[2][0]*m2[1][2])/det;
+				inv[2][0] = (m2[1][0]*m2[2][1] - m2[2][0]*m2[1][1])/det;
+				inv[0][1] = -(m2[0][1]*m2[2][2] - m2[2][1]*m2[0][2])/det;
+				inv[1][1] = (m2[0][0]*m2[2][2] - m2[2][0]*m2[0][2])/det;
+				inv[2][1] = -(m2[0][0]*m2[2][1] - m2[2][0]*m2[0][1])/det;
+				inv[0][2] = (m2[0][1]*m2[1][2] - m2[1][1]*m2[0][2])/det;
+				inv[1][2] = -(m2[0][0]*m2[1][2] - m2[1][0]*m2[0][2])/det;
+				inv[2][2] = (m2[0][0]*m2[1][1] - m2[1][0]*m2[0][1])/det;
 				// cout << i << " " << signstr1 << " bla\n";
+
+				double minangle = 100;
+				for (int j = 0; j < 24; j++)
+				{
+					double tt[3][3];
+					tt[0][0] = m1[0][0]*rot[j][0][0] + m1[0][1]*rot[j][1][0] + m1[0][2]*rot[j][2][0];
+					tt[0][1] = m1[0][0]*rot[j][0][1] + m1[0][1]*rot[j][1][1] + m1[0][2]*rot[j][2][1];
+					tt[0][2] = m1[0][0]*rot[j][0][2] + m1[0][1]*rot[j][1][2] + m1[0][2]*rot[j][2][2];
+					tt[1][0] = m1[1][0]*rot[j][0][0] + m1[1][1]*rot[j][1][0] + m1[1][2]*rot[j][2][0];
+					tt[1][1] = m1[1][0]*rot[j][0][1] + m1[1][1]*rot[j][1][1] + m1[1][2]*rot[j][2][1];
+					tt[1][2] = m1[1][0]*rot[j][0][2] + m1[1][1]*rot[j][1][2] + m1[1][2]*rot[j][2][2];
+					tt[2][0] = m1[2][0]*rot[j][0][0] + m1[2][1]*rot[j][1][0] + m1[2][2]*rot[j][2][0];
+					tt[2][1] = m1[2][0]*rot[j][0][1] + m1[2][1]*rot[j][1][1] + m1[2][2]*rot[j][2][1];
+					tt[2][2] = m1[2][0]*rot[j][0][2] + m1[2][1]*rot[j][1][2] + m1[2][2]*rot[j][2][2];
+					
+					double g11 = tt[0][0]*inv[0][0] + tt[0][1]*inv[1][0] + tt[0][2]*inv[2][0];
+					double g22 = tt[1][0]*inv[0][1] + tt[1][1]*inv[1][1] + tt[1][2]*inv[2][1];
+					double g33 = tt[2][0]*inv[0][2] + tt[2][1]*inv[1][2] + tt[2][2]*inv[2][2];
+					
+					double trace = (g11 + g22 + g33 - 1)/2;
+					double tetta = acos(trace);
+					
+					// if (isnan(tetta))
+					// {
+						// cout << tetta << " " << trace << endl;
+						// cout << g11 << " " << g22 << " " << g33 << endl;
+						// exit(0);
+					// }
+					if (minangle > tetta) minangle = tetta;
+				}
 				output[i][signstr1] 
-					= {	abs(abs_euler[i][signstr].alpha - abs_euler[i][signstr10].alpha), 
-											abs(abs_euler[i][signstr].beta - abs_euler[i][signstr10].beta),
-											abs(abs_euler[i][signstr].gamma - abs_euler[i][signstr10].gamma)	};
+					= {	minangle, 0, 0 };
 	
 			}
 		}
@@ -73,104 +139,38 @@ orient_unit* GeneticAlgoForOrientationsClass::relative_euler(container* con, ori
 	return output;
 }
 
-double GeneticAlgoForOrientationsClass::fitness_penalty(int points_number, double (*original_distribution)(string), 
-	map<string, double> current_distribution, string output)
+double GeneticAlgoForOrientationsClass::fitness_penalty(int points_number, double (*original_distribution)(double), 
+	map<double, double> current_distribution, string output)
 {
 	double sum = 0;
-	ofstream myfile;
-	if (output != "")
+	for (map<double, double>::iterator it = current_distribution.begin(); it != current_distribution.end(); it++)
 	{
-		myfile.open (output.c_str());
-		myfile << "x  y  z   error\n";
-	}
-	double s1 = 0, s2 = 0;
-	
-	for (map<string, double>::iterator it=current_distribution.begin(); it!=current_distribution.end(); ++it){
-		// cout << "original: " << it->first << " => " << (*original_distribution)(it->first) << "\n";
-		s1 += (*original_distribution)(it->first);
-		s2 += it->second;
-		// cout << it->second << endl;
-		double dif = (*original_distribution)(it->first) - it->second;
-		sum += pow(dif, 2);
-		
-		istringstream f(it->first.c_str());
-		string s;
-		getline(f, s, '|');
-		double alpha = stod(s);
-		getline(f, s, '|');
-		double beta = stod(s);
-		getline(f, s, '|');
-		double gamma = stod(s);
-		
-		if (output != "")
-			myfile << alpha << "  " << beta << "  " << gamma << "  " << dif << "\n";
+		double orig;
+		double par = it->first/180*M_PI;
+		orig = original_distribution(par);
+		sum += pow(it->second - orig, 2);
+		// cout << it->first << " " << it->second << " " << orig << "\n";
 	}
 	
-	// cout << s1 << " : " << s2 << endl;
-	// exit(0);
-	
-	if (output != "")
-		myfile.close();
-	return (sum / points_number);
+	return sum / points_number;
 }
 
 double GeneticAlgoForOrientationsClass::size_penalty(orient_unit parent_rel, string output)
 {
-	map<string, double> current_distribution;
+	map<double, double> current_distribution;
 	
-	double koef = 1 / (double)parent_rel.size();
-	
-	for (int i = 0; i < penalty_steps; i++)
-		for (int j = 0; j < penalty_steps; j++)
-			for (int k = 0; k < penalty_steps; k++)
-			{
-				stringstream index;
-				index << (i*penalty_step + penalty_step/2) << "|" << (j*penalty_step + penalty_step/2) 
-					<< "|" << (k*penalty_step + penalty_step/2);
-				
-				string index_real = index.str();
-				current_distribution[index_real] = -0.0000001;
-			}
-	
+	double koef = 1.0 / parent_rel.size() / penalty_step_orient * 10000;
 	
 	for (orient_unit::iterator it = parent_rel.begin(); it != parent_rel.end(); it++){
-		// cout << it->second.alpha << " " << it->second.beta << " " << it->second.gamma << "\n";
-		int i = floor(it->second.alpha / (penalty_step));
-		int j = floor(it->second.beta / (penalty_step));
-		int k = floor(it->second.gamma / (penalty_step));
+		int i = floor((it->second.alpha * 180 / M_PI) / (penalty_step_orient));
 		
-		if (i == 10) i = 9;
-		if (j == 10) j = 9;
-		if (k == 10) k = 9;
+		double alpha = i*penalty_step_orient + penalty_step_orient/2;
 		
-		double alpha = i*penalty_step + penalty_step/2;
-		double beta = j*penalty_step + penalty_step/2;
-		double gamma = k*penalty_step + penalty_step/2;
-		
-		stringstream index;
-		index << (alpha) << "|" << (beta) << "|" << (gamma);
-		string index_real = index.str();
-		if (current_distribution[index_real] == 0)
-		{
-			cout << "double check: " << current_distribution[index_real] << "\n";
-			cout << "index: " << index_real << "\n";
-			cout << "out of range angles: " << it->second.alpha << " " << it->second.beta << " " << it->second.gamma << "\n";
-			cout << "out of range indexes: " << i << " " << j << " " << k << "\n";
-			exit(0);
-		}
-	
-		current_distribution[index_real] = current_distribution[index_real] + koef;
+		current_distribution[alpha] = current_distribution[alpha] + koef;
 	}
 	
-	double ret = fitness_penalty(pow(penalty_steps, 3), this->original_distribution, current_distribution, output);
-	// if (ret > 1000)
-	// {
-		// for (map<string, double>::iterator it = current_distribution.begin(); it != current_distribution.end(); it++)
-			// if (it->second > 0.5)
-				// cout << "bayda: " << it->first << " " << it->second << "\n";
-		// exit(0);
-	// }
-	// std:cout << "penalty " << ret << "\n";
+	double ret = fitness_penalty(pow(penalty_steps_orient, 3), this->original_distribution, current_distribution, output);
+	
 	return ret;
 }
 
@@ -179,7 +179,7 @@ double GeneticAlgoForOrientationsClass::mutate_dist(double mutation_max_applitud
 	switch(dist_num){
 		//uniform dist
 		case 0:
-		return rnd()*mutation_max_applitude_e;
+		return rnd()*mutation_max_applitude_e*(rnd() > 0.5 ? -1 : 1);
 
 		//normal dist
 		case 1:
@@ -255,15 +255,18 @@ void GeneticAlgoForOrientationsClass::mutation(orient_unit **con1, bool reinit_f
 	orient_unit *con = *con1;
 	for (int i = surviving_size; i < population_size; i++){
 		
-		orient_unit ind1 = con[i];
-		for (orient_unit::iterator it = ind1.begin(); it != ind1.end(); it++)
+		// orient_unit ind1 = con[i];
+		
+		for (orient_unit::iterator it = con[i].begin(); it != con[i].end(); it++)
 		{
 			double num = rnd();
 			if (num < mutation_probability){
 				if (reinit_flag == false){
-					ind1[it->first] = mutate(it->second, a_min, a_max, true, dist_num);
+					euler_angles tmp = mutate(it->second, a_min, a_max, true, dist_num);
+					// cout << "mutated: " << ind1[it->first].alpha << " " << tmp.alpha << endl;
+					con[i][it->first] = tmp;
 				} else {
-					ind1[it->first] = {reinit_angles(), reinit_angles(), reinit_angles()};
+					con[i][it->first] = {reinit_angles(), reinit_angles(), reinit_angles()};
 				}
 			}
 		}
@@ -441,7 +444,7 @@ orient_unit* GeneticAlgoForOrientationsClass::crossover_by_mapping(container* co
 	
 	while (offspring_amount < population_size)
 	{
-		cout << "off amount " << offspring_amount << "\n";
+		// cout << "off amount " << offspring_amount << "\n";
 		//tournament select of 2 individuals for a crossover
 		int indx = tournament_selection(parents_rel);
 		orient_unit ind1 = parents[indx];
@@ -564,34 +567,27 @@ void GeneticAlgoForOrientationsClass::write_penalty_step(std::string filename, i
 	myfile.close();
 }
 
-void GeneticAlgoForOrientationsClass::output_data(string filename, double* size_dist)
+void GeneticAlgoForOrientationsClass::output_data(string filename, orient_unit parent_rel)
 {
-	/*double avg = 0;
 	map<double, double> current_distribution;
 	
-	for (int i = 0; i < particles; i++)
-		avg += size_dist[i];
+	double koef = 1.0 / parent_rel.size() / penalty_step_orient * 10000;
 	
-	avg = avg / particles;
-	
-	//normalization factor
-	double coef = 1 / penalty_step / particles;
-	for (int i = 0; i < penalty_steps; i++)
-	{
-		current_distribution[i*penalty_step + penalty_step/2] = 0;
-		for (int j = 0; j < particles; j++){
-			// cout << "size: " << size_dist[j] << " i: " << i*penalty_step << "\n";
-			if ((size_dist[j] / avg) > i*penalty_step && (size_dist[j] / avg) < (i+1)*penalty_step)
-				current_distribution[i*penalty_step + penalty_step/2] = current_distribution[i*penalty_step + penalty_step/2] + coef;
-		}
+	for (orient_unit::iterator it = parent_rel.begin(); it != parent_rel.end(); it++){
+		int i = floor((it->second.alpha * 180 / M_PI) / (penalty_step_orient));
+		
+		double alpha = i*penalty_step_orient + penalty_step_orient/2;
+		
+		current_distribution[alpha] = current_distribution[alpha] + koef;
 	}
+	
 	
 	ofstream myfile;
 	myfile.open (filename.c_str());
-	myfile << "Size(A)  Probability_real    Probability_expected\n";
+	myfile << "Angle(A)  Probability_real    Probability_expected\n";
 	for (map<double, double>::iterator it=current_distribution.begin(); it!=current_distribution.end(); ++it)
 	{
-		myfile << it->first << "  " << it->second << "  " << original_distribution(it->first) << "\n";
+		myfile << it->first << "  " << it->second << "  " << original_distribution(it->first/180*M_PI) << "\n";
 	}
-	myfile.close();*/
+	myfile.close();
 }

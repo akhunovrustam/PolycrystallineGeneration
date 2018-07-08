@@ -1,0 +1,15 @@
+echo none
+log none
+
+dimension 3
+boundary p p p
+units metal
+atom_style atomic
+
+read_data 	    ./fcc_lattice.data
+pair_style      eam/alloy
+pair_coeff      * * ./AlCu.eamllb.alloy Al
+thermo_style	custom etotal
+thermo 1
+
+run 0

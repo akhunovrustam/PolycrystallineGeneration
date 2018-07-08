@@ -10,7 +10,7 @@
 #include <sstream>
 #include <ctime>
 #include <string>
-#include "Consts.hh"
+#include "GeneralConsts.hh"
 
 using namespace std;
 using namespace voro;
@@ -129,6 +129,12 @@ void create_dir(string* filename, string prefix, string folder = "results_size/"
 	
 }
 
+struct atom_coords {
+	double x;
+	double y;
+	double z;
+};
+
 struct point_for_crossover {
 	double x;
 	double y;
@@ -144,7 +150,7 @@ struct euler_angles {
 	double gamma;
 };
 
-
+typedef map<int, atom_coords> atoms;
 typedef map<int, vector<int>> neighbors;
 typedef map<double, map<double, map<double, int>>> sorted_points;
 typedef map<string, euler_angles> orient_unit;

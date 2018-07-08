@@ -13,9 +13,9 @@
 using namespace std;
 using namespace voro;
 
-LatticeGeneratorClass::LatticeGeneratorClass(int centers){
-	con = new container(x_min,x_max,y_min,y_max,z_min,z_max,6,6,6,true,true,true,8);
-	particles = centers;
+LatticeGeneratorClass::LatticeGeneratorClass(container* cont){
+	con = cont;
+	particles = particles;
 }
 
 void LatticeGeneratorClass::fillRandomlyAndBuildGrains(){
@@ -28,15 +28,6 @@ void LatticeGeneratorClass::fillRandomlyAndBuildGrains(){
 	planes_grains = new float**[particles];
 	
 	
-	
-	// srand (time(NULL));
-	
-	for(i=0;i<particles;i++) {
-		x=x_min+rnd()*(x_max-x_min);
-		y=y_min+rnd()*(y_max-y_min);
-		z=z_min+rnd()*(z_max-z_min);
-		con->put(i,x,y,z);
-	}
 	
 	// Loop over all particles in the container and compute each Voronoi cell
 	c_loop_all cl(*con);
@@ -74,11 +65,12 @@ void LatticeGeneratorClass::fillRandomlyAndBuildGrains(){
 	// Output the Voronoi cells in gnuplot format
 	con->draw_cells_gnuplot("random_points_v.gnu");
 	
+	at = new atoms[particles];
 	//generate lattice for polycrystal grains
 	for (i = 0; i < particles; i++)
 	{
 		printf("draw_particle inside: i=%i\n", i);
-		generateLattice(planes_grains[i]);
+		at[i] = generateLattice(planes_grains[i]);
 	}
 }
 
@@ -141,14 +133,14 @@ void LatticeGeneratorClass::calculateGrainPlanes(vector<int> &f_vert,vector<doub
 	planes[planes_size][8] = max;
 }
 
-int LatticeGeneratorClass::generateLattice(float** grain) {
+atoms LatticeGeneratorClass::generateLattice(float** grain, euler_angles angles) {
 	
 	float alpha, beta, gamma;
 	int box_dimension = 10;
 	// srand (time(NULL));
 	
-	// float basis[4][3] = { {0.0, 0.0, 0.0}, {0.5, 0.5, 0.0}, {0.5, 0, 0.5}, {0, 0.5, 0.5} };
-	float basis[1][3] = { {0.0, 0.0, 0.0}};
+	float basis[4][3] = { {0.0, 0.0, 0.0}, {0.5, 0.5, 0.0}, {0.5, 0, 0.5}, {0, 0.5, 0.5} };
+	// float basis[1][3] = { {0.0, 0.0, 0.0}};
 	
 	int ii = 0;
 	box_dimension = 0;
@@ -169,14 +161,14 @@ int LatticeGeneratorClass::generateLattice(float** grain) {
 	float zc = grain[1][7];
 	
 	//rotation angles
-	alpha = rnd() * PI / 2;
-	beta = rnd() * PI / 2;
-	gamma = rnd() * PI / 2;
+	alpha	 = angles.alpha;
+	beta 	 = angles.beta;
+	gamma	 = angles.gamma;
 	
-	
-	stringstream buffer;
-	ofstream myfile;
-	myfile.open("fcc_lattice.xyz", std::fstream::in | std::fstream::out | std::fstream::app);
+	atoms at;
+	// stringstream buffer;
+	// ofstream myfile;
+	// myfile.open("fcc_lattice.xyz", std::fstream::in | std::fstream::out | std::fstream::app);
 	
 	//generation and cutting off of atoms
 	int atoms_quantity = 0;
@@ -239,15 +231,18 @@ int LatticeGeneratorClass::generateLattice(float** grain) {
 						if (z < z_min) z = z_max - (z_min - z);
 						if (z > z_max) z = z_min - (z_max - z);
 						
+						at[atoms_quantity] = {x, y, z};
 						atoms_quantity++;
-						buffer << "Al " << x << " " << y << " " << z << "\n";
+						// buffer << "Al " << x << " " << y << " " << z << "\n";
 					}
 				}
 			}
 	
-	myfile << atoms_quantity << "\n";
-	myfile << "FCC \n";
-	myfile << buffer.str();
+	return at;
+	// myfile << atoms_quantity << "\n";
+	// myfile << "FCC \n";
+	// myfile << buffer.str();
 	
-	myfile.close();
+	// myfile.close();
+	
 }
