@@ -11,7 +11,7 @@ In order to build the project you need to install Voro++ library. Then you can f
 Note that command works only on Posix systems.
 After running the binary you will obtain 4 files. From 2 of them you can see grains of Voronoi tessellation by typing: 
 
-	splot "random_points_p.gnu" u 2:3:4, "random_points_v.gnu" with 
+	splot "random_points_p.gnu" u 2:3:4, "random_points_v.gnu" with lines
 	
 	
 Other 2 files present lattice itself and points of the vertices of the tessellation in XYZ format. 
