@@ -10,31 +10,31 @@
 #include <fstream>
 #include <sstream>
 #include "voro++.hh"
+#include "GeneralConsts.hh"
+#include "ExtraStructAndFunc.hh"
 
 using namespace std;
 using namespace voro;
 
-#define PI 3.14159265
-#define LATTICE 4.095
+
 
 class LatticeGeneratorClass
 {
-	static const double x_min=-1,x_max=1;
-	static const double y_min=-1,y_max=1;
-	static const double z_min=-1,z_max=1;
+	static constexpr double x_min=0, x_max=half_boxside;
+	static constexpr double y_min=0, y_max=half_boxside;
+	static constexpr double z_min=0, z_max=half_boxside;
 	container *con;
 	
 public:
 	float ***planes_grains;
-	unsigned int particles;
 	
-	LatticeGeneratorClass(int centers);
+	LatticeGeneratorClass(container* cont);
 	
 	double rnd() {return double(rand())/RAND_MAX;}
 
 	void calculateGrainPlanes(vector<int> &f_vert,vector<double> &v,int j, float** planes, float x, float y, float z, int planes_size);
-	atoms generateLattice(float** grain, euler_angles angles);
-	void fillRandomlyAndBuildGrains();
+	atoms generateLattice(float** grain, orient_unit angless, bool periodic = true);
+	map<int, atoms> fillRandomlyAndBuildGrains(orient_unit angles);
 };
 
 #endif

@@ -4,11 +4,8 @@
 // Email    : akhunovrustam@mail.ru
 // Date     : 
 
-#include "voro++.hh"
-#include "LatticeGeneratorClass.cc"
-#include "ExtraStructAndFunc.hh"
-#include "GeneticAlgoForSizesClass.cc"
-#include "GeneticAlgoForOrientationsClass.cc"
+
+#include "GeneralClass.cc"
 
 using namespace std;
 using namespace this_thread;
@@ -16,19 +13,28 @@ using namespace chrono;
 
 
 int main(int argc, char *argv[]) {
-	GeneralClass generator = new GeneralClass();
+	General1Class* gn = new General1Class();
 	
-	generator->GrainSizeGenerate();
+	cout << "size generation grains" << endl;
+	gn->GrainSizeGenerate(argc, argv);
 	
-	generator->GrainOrientationGenerate();
+	cout << "orient generation grains" << endl;
+	gn->GrainOrientationGenerate(argc, argv);
 	
-	generator->FillGrains();
+	gn->writeAll();
+	// exit(0);
 	
-	generator->RelaxFirst();
+	// gn->loadAll();
+	cout << "fill grains" << endl;
+	gn->FillGrains();
 	
-	generator->RelaxSecond();
+	cout << "relax 1" << endl;
+	string str = gn->RelaxFirst(argc, argv);
 	
-	generator->OutputForLAMMPS();
+	cout << "relax 2" << endl;
+	gn->RelaxSecond(argc, argv, str);
 	
-	delete generator;
+	// gn->OutputForLAMMPS();
+	
+	delete gn;
 }

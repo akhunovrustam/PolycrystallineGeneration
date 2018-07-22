@@ -1,0 +1,21 @@
+echo none
+log none
+
+variable          fname string "test.dump"
+dimension 3
+boundary p p p
+units metal
+atom_style atomic
+
+print $f
+read_data 	    $f/fcc_lattice.data
+pair_style      eam/alloy
+pair_coeff      * * ./AlCu.eamllb.alloy Al
+compute 		peratom all pe/atom
+
+dump			outperatom all custom 100 $f/${fname} id type x y z c_peratom
+thermo_style	custom etotal
+#thermo_style	none
+thermo 1
+
+run 0

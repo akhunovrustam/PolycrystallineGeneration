@@ -1,7 +1,7 @@
-#ifndef LatGen
-#define LatGen
+#ifndef GenAlgoSize
+#define GenAlgoSize
 
-#include "Consts.hh"
+#include "GeneralConsts.hh"
 #include <random>
 
 using namespace std;
@@ -10,11 +10,11 @@ using namespace voro;
 class GeneticAlgoForSizesClass
 {
 public:
-	static constexpr double x_min=-half_boxside;
+	static constexpr double x_min=0;
 	static constexpr double x_max=half_boxside;
-	static constexpr double y_min=-half_boxside;
+	static constexpr double y_min=0;
 	static constexpr double y_max=half_boxside;
-	static constexpr double z_min=-half_boxside;
+	static constexpr double z_min=0;
 	static constexpr double z_max=half_boxside;
 	int population_size;
 	default_random_engine generator;

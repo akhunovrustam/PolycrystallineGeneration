@@ -1,0 +1,18 @@
+echo none
+log none
+
+dimension 3
+boundary p p p
+units metal
+atom_style atomic
+
+read_data 	    $f/fcc_lattice_final.data
+pair_style      eam/alloy
+pair_coeff      * * ./AlCu.eamllb.alloy Al
+compute 		peratom all pe/atom
+
+dump			outperatom all custom 100 $f/coords_cn_new.dump id type x y z c_peratom
+thermo_style	custom etotal
+thermo 1
+
+run 0

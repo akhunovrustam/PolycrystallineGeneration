@@ -15,19 +15,30 @@ using namespace voro;
 
 LatticeGeneratorClass::LatticeGeneratorClass(container* cont){
 	con = cont;
-	particles = particles;
 }
 
-void LatticeGeneratorClass::fillRandomlyAndBuildGrains(){
+map<int, atoms> LatticeGeneratorClass::fillRandomlyAndBuildGrains(orient_unit orient){
 	unsigned int i,j;
 	double x,y,z;
 	int id,nx,ny,nz;
 	voronoicell_neighbor c;
 	vector<int> neigh,f_vert;
 	vector<double> v;
-	planes_grains = new float**[particles];
+	map<int, float**> planes_grains;
 	
+	// at[0][0] = {0, 0, 0};
+	// at[0][1] = {0, 0, 4.095};
+	// at[0][2] = {0, 4.095, 0};
+	// at[0][3] = {4.095, 0, 0};
 	
+	// at[1][0] = {4.095, 4.095, 4.095};
+	// at[1][1] = {4.095, 4.095, 8.19};
+	// at[1][2] = {4.095, 8.19, 4.095};
+	// at[1][3] = {8.19, 4.095, 4.095};
+	
+	// con = new container(0 , half_boxside, 0, half_boxside, 0, half_boxside, 6, 6, 6, true, true, true, 8);
+	// con->put(0, 2.0, 2.0, 2.0);
+	// con->put(1, 6.0, 6.0, 6.0);
 	
 	// Loop over all particles in the container and compute each Voronoi cell
 	c_loop_all cl(*con);
@@ -55,7 +66,7 @@ void LatticeGeneratorClass::fillRandomlyAndBuildGrains(){
 			j+=f_vert[j]+1;
 		}
 		
-		planes_grains[loop_counter++] = planes;
+		planes_grains[id] = planes;
 		
 	} while (cl.inc());
 	
@@ -65,13 +76,22 @@ void LatticeGeneratorClass::fillRandomlyAndBuildGrains(){
 	// Output the Voronoi cells in gnuplot format
 	con->draw_cells_gnuplot("random_points_v.gnu");
 	
-	at = new atoms[particles];
+	map<int, atoms> at;
+	map<int, atoms> at1;
 	//generate lattice for polycrystal grains
-	for (i = 0; i < particles; i++)
+	for (map<int, float**>::iterator it = planes_grains.begin(); it != planes_grains.end(); it++)
 	{
-		printf("draw_particle inside: i=%i\n", i);
-		at[i] = generateLattice(planes_grains[i]);
+		// printf("draw_particle inside: i=%i\n", it->first);
+		at[it->first] = generateLattice(it->second, orient);
 	}
+	
+	for (map<int, float**>::iterator it = planes_grains.begin(); it != planes_grains.end(); it++)
+	{
+		// printf("draw_particle inside: i=%i\n", it->first);
+		at1[it->first] = generateLattice(it->second, orient, false);
+	}
+	
+	return at;
 }
 
 void LatticeGeneratorClass::calculateGrainPlanes(vector<int> &f_vert,vector<double> &v,int j, float** planes, float x, float y, float z, int planes_size) {
@@ -133,7 +153,7 @@ void LatticeGeneratorClass::calculateGrainPlanes(vector<int> &f_vert,vector<doub
 	planes[planes_size][8] = max;
 }
 
-atoms LatticeGeneratorClass::generateLattice(float** grain, euler_angles angles) {
+atoms LatticeGeneratorClass::generateLattice(float** grain, orient_unit angless, bool periodic) {
 	
 	float alpha, beta, gamma;
 	int box_dimension = 10;
@@ -160,7 +180,12 @@ atoms LatticeGeneratorClass::generateLattice(float** grain, euler_angles angles)
 	float yc = grain[1][6];
 	float zc = grain[1][7];
 	
+	stringstream sign;
+	sign << xc << "|" << yc << "|" << zc;
+	string signstr = sign.str();
 	//rotation angles
+	euler_angles angles = angless[signstr];
+	
 	alpha	 = angles.alpha;
 	beta 	 = angles.beta;
 	gamma	 = angles.gamma;
@@ -169,9 +194,9 @@ atoms LatticeGeneratorClass::generateLattice(float** grain, euler_angles angles)
 	// stringstream buffer;
 	// ofstream myfile;
 	// myfile.open("fcc_lattice.xyz", std::fstream::in | std::fstream::out | std::fstream::app);
-	
 	//generation and cutting off of atoms
 	int atoms_quantity = 0;
+	box_dimension = ceil(half_boxside/LATTICE/1);
 	for (int i = -box_dimension*2; i < box_dimension*2; i++)
 		for (int j = -box_dimension*2; j < box_dimension*2; j++)
 			for (int k = -box_dimension*2; k < box_dimension*2; k++){
@@ -217,19 +242,22 @@ atoms LatticeGeneratorClass::generateLattice(float** grain, euler_angles angles)
 						}
 					}
 					
-					
 					if (inside_grain)
+					// if (true)
 					{
 						//put external atoms inside emulation box
 						// for x
-						if (x < x_min) x = x_max - (x_min - x);
-						if (x > x_max) x = x_min - (x_max - x);
-						//for y
-						if (y < y_min) y = y_max - (y_min - y);
-						if (y > y_max) y = y_min - (y_max - y);
-						//for z
-						if (z < z_min) z = z_max - (z_min - z);
-						if (z > z_max) z = z_min - (z_max - z);
+						if (periodic)
+						{
+							if (x < x_min) x = x_max - (x_min - x);
+							if (x > x_max) x = x_min - (x_max - x);
+							//for y
+							if (y < y_min) y = y_max - (y_min - y);
+							if (y > y_max) y = y_min - (y_max - y);
+							//for z
+							if (z < z_min) z = z_max - (z_min - z);
+							if (z > z_max) z = z_min - (z_max - z);
+						}
 						
 						at[atoms_quantity] = {x, y, z};
 						atoms_quantity++;
@@ -237,6 +265,7 @@ atoms LatticeGeneratorClass::generateLattice(float** grain, euler_angles angles)
 					}
 				}
 			}
+	
 	
 	return at;
 	// myfile << atoms_quantity << "\n";

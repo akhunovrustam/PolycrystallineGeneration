@@ -1,9 +1,9 @@
-#ifndef LatGen
-#define LatGen
+#ifndef GenAlgoOrient
+#define GenAlgoOrient
 
 
 #include <random>
-#include "ConstsO.hh"
+#include "GeneralConsts.hh"
 
 using namespace std;
 using namespace voro;

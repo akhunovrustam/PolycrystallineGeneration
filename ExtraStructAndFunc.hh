@@ -1,3 +1,6 @@
+#ifndef ExtraStruct
+#define ExtraStruct
+
 #define _USE_MATH_DEFINES
 #include <vector>
 #include <stdio.h>
@@ -160,3 +163,5 @@ struct con_and_points{
 	container* con;
 	sorted_points pt;
 };
+
+#endif

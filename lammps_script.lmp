@@ -10,6 +10,7 @@ read_data 	    ./fcc_lattice.data
 pair_style      eam/alloy
 pair_coeff      * * ./AlCu.eamllb.alloy Al
 thermo_style	custom etotal
+#thermo_style	none
 thermo 1
 
 run 0
