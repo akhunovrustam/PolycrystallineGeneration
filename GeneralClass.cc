@@ -493,6 +493,7 @@ string General1Class::RelaxFirst(int argc, char *argv[]){
 	
 	GeneticAlgoForShiftingClass *algo = new GeneticAlgoForShiftingClass(population_size);
 	
+	algo->pe(filename + "/..", at);
 	
 	for (int i = 1; i < population_size_relax; i++)
 	{

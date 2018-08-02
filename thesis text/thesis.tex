@@ -6,121 +6,168 @@
 \usepackage{graphicx}
 \usepackage{amsmath}
 \usepackage{gensymb}
+\usepackage{xcolor}
+\usepackage{tabularx}
+\usepackage{colortbl}
+\usepackage{caption}
+
 \graphicspath{{./media/}}
 \begin{document}
 
-\title{
-	{Generating of realistic polycrystalline structure}\\
-	{\large Gdansk University of Technology}\\
-	{\large MathMods Erasmus Mundus Joint Master Degree}\\
-	{\includegraphics[width=3.0in]{pg_logo.jpg}}
-}
+\setcounter{page}{0}
+\thispagestyle{empty}
+\captionsetup{justification=centering}
+\begin{figure}
+\minipage{0.32\textwidth}
+    \center
+    \includegraphics[width=40mm]{pg_logo}
+    \caption*{\footnotesize Gdansk University of Technology}
+\endminipage\hfill
+\minipage{0.32\textwidth}
+    \center
+    \includegraphics[width=45mm]{mathmods}
+    \caption*{}
+\endminipage\hfill
+\minipage{0.32\textwidth}%
+    \center
+    \includegraphics[width=30mm]{laq}
+    \caption*{\footnotesize Universit\`a degli studi dell'Aquila}
+\endminipage
+\end{figure}
+
+\begin{center}
+    \textcolor{white}{to separate}\\
+    \Large{\textbf{Erasmus Mundus Consortium “MathMods”}}\\
+    \vspace{10mm}
+    \normalsize
+    Double Master's Degree Programme in\\
+    Mathematical Modelling in Engineering: Theory, Numerics, Applications\\
+    \vspace{5mm}
+    
+    \small{In the framework of the}\\
+    \small{Consortium Agreement and Award of a Joint/Multiple Degree 2013-2019}
+    \vspace{5mm}
+    
+    \Large\textbf{Master's thesis}\\
+    \Large\textbf{A genetic algorithm based computer program for generating initial structure of realistic polycrystalline materials for molecular dynamics simulations }\\
+    \vspace{5mm}
+    
+    \large
+    \begin{tabular}{ccc}
+        $Supervisor$ & & $Candidate$\\
+        Dr.Eng. Szymon Winczewski  & &  Rustam Akhunov 
+    \end{tabular}\\
+    
+    \vspace{10mm}
+    \small
+    2016/2018
+\end{center}
+
+
 \author{Rustam Akhunov}
 
-\maketitle
 
 \tableofcontents
 
 \begin{abstract}
-The three-dimensional polycrystalline models with the log-normal grain size distribution are constructed by constrained Voronoi tessellation. For achieving needed distribution of grain sizes and grain orientation I used Genetic Algorithm with Least Square. GA is also used for achieving realistic distribution for grain orientation distribution. Molecular-dynamics method is used in LAMMPS software to obtain the relaxed polycrystal. For the relaxation process and for simulation multibody potential is used.
+The work dedicated to realistic polycrystalline structure generation. For this purpose Genetic Algorithm (GA) is used. Grains are built following Voronoi tessellation method. The study is done in 4 steps: grain size distribution fitting, grain orientation distribution fitting, grain filling by particles, relaxation. For grain size and grain orientation distributions and also for first step relaxation GA was used. Relaxation consists of two steps: first by using GA and second by removing excess atoms. By the end of structure generation relaxation within LAMMPS simulation software is done. In LAMMPS molecular static and molecular dynamics relaxation is done. 
 \end{abstract}
 
 
 \section{Introduction}
 
-There are known a lot of modern application of polycristalline materials. Polycristallines are used for tritium generation \cite{john99}, automotive, healthcare and non-destructive testing \cite{pardo11}, solar cells \cite{schrop98}, semiconducting elements \cite{harb85} etc. With increasing demand of new properties of new materials increases also need for the modern methods of polycristalline simulation \cite{shen15}. And this work is one more attempt to deal with the simulation of polycryrstallines in molecular dynamics environment such as LAMMPS \cite{plimp95, plimp00}
+There are known a lot of modern applications of polycristalline materials. Polycristallines are used for tritium generation \cite{john99}, automotive, healthcare and non-destructive testing \cite{pardo11}, solar cells \cite{schrop98}, semiconducting elements \cite{harb85} etc. With increasing demand of new properties of new materials increases also need for the modern methods of polycristalline simulation \cite{shen15}. And this work is one more attempt to deal with the simulation of polycryrstallines in molecular dynamics environment such as LAMMPS \cite{plimp95, plimp00}
 
-There are numbers of experiments and theoretical research for the intrinsic structure, effective thermal conductivity, lattice dynamical, optical and thermodynamic properties of polycristalline \cite{shen15}. But still many characteristics have not been researched sufficiently.
+There are numbers of experiments and theoretical researches for the intrinsic structure, effective thermal conductivity, lattice dynamical, optical and thermodynamic properties of polycristalline \cite{shen15}. But still many characteristics have not been researched sufficiently.
 
-We know few methods for generating digital nanostructured materials for use in the simulation: Poisson–Voronoi tessellation (PVT) \cite{wear86}, Monodispersive grain size (MGS) \cite{wang96}, Laguerre–Voronoi tessellation (LVT) \cite{fan04}, Johnson–Mehl (JM) model \cite{okabe00} etc. In this work I used Voronoi tesselation model for the reason of its good solution for the complex sctructural nanocrystals and also convinient interface for the genetic algorithm, that I used during our polycristalline generation. It is also generally accepted that many single-phase fully dense nanocrystals are described by a log-normal grain size distribution. And I took this distribution as a reference for polycristalline generation.
+We know few methods for generating digital nanostructured materials for use in the simulation: Poisson–Voronoi tessellation (PVT) \cite{wear86}, Monodispersive grain size (MGS) \cite{wang96}, Laguerre–Voronoi tessellation (LVT) \cite{fan04}, Johnson–Mehl (JM) model \cite{okabe00} etc. In this work Voronoi tesselation model is used for the reason of its good solution for the complex sctructural nanocrystals and also convinient interface for the genetic algorithm, that is used during polycristalline generation. It is also generally accepted that many single-phase fully dense nanocrystals are described by a log-normal grain size distribution. And this distribution is considered as a reference for polycristalline generation.
 
-The goal of this work is implementation of general methodology of generation realistic polycrystalline structure. It should correspond grain sizes and orienation distribution, have minimal energy and be relevant to experimental density, lattice constant etc. The methodology also should be fast enough in order to do generation in one or several days on adequate resources. This all I am trying to do using existing results for different polycrystallines.
-
+The goal of this work is implementation of general methodology and usable tool of generation realistic polycrystalline structure. It should correspond grain sizes and orienation distribution, have minimal energy and be relevant to experimental density, lattice constant etc. The methodology also should be fast enough in order to do generation in one or several days on adequate resources. This everything was done based on existing results for different polycrystallines.
 
 \section{Overview of existing methods and results}
 
-Before my research I did an overview of existing results in several related papers. One of the most important article for our research was "Constructing three-dimensional (3D) nanocrystalline models of $ Li_4SiO_4 $ for numerical modeling and simulation" \cite{shen15}.
+Before starting the research an overview on existing results in several related papers is done. One of the most important article for this research was "Constructing three-dimensional (3D) nanocrystalline models of $ Li_4SiO_4 $ for numerical modeling and simulation" \cite{shen15}.
 
-In this paper authors considers problem of generation $ Li_4SiO_4 $ polycrystalline that is  narrowing the result for particular matter. But I rather try to implement more general approach. Of course by making more general method I face much more problems with efficiency and time consuming of the generation method. But even general method can be fitted to the particular element.
+In this paper authors consider problem of generation $ Li_4SiO_4 $ polycrystalline. In fact narrowing the result only for $ Li_4SiO_4 $ polycrystalline is the main limitation of this study. But in current work it was tried to implement more general approach. Of course by making more general method one can face much more problems with efficiency and time consuming of the generation method. But this general method can be adapted to the particular element. And having such a method can simplify the whole task for particular element and help researcher concentrate only on specific features of chosen matter.
 
-The authors use genetic algorithm to reach particular distribution of grain sizes and as I can see they use only mutation operator without crossover. But I in contrary use both mutation and crossover. Moreover I implemented 3 variants of crossover and 3 variants of mutation in order to find optimal operators for our task. I implemented numerous computing experiments and chose optimal combination of operators and other algorithm parameters.
+The authors use genetic algorithm to reach particular distribution of grain sizes and as one can see they use only mutation operator without crossover. But in this work in contrary both mutation and crossover operators are used. Moreover, 3 variants of crossover and 3 variants of mutation were implemented in current study in order to find optimal operators for the task. It were performed numerous computing experiments and optimal combination of operators and other algorithm parameters were chosen.
 
-But it is necessary to pay tribute to the good results obtained during implementation of the algorithm. Authors were able to reach very good permormance. In particular the computation time per step was 3.7 s with 6 processors and it is much better compared to the result 3.9 s with 32 processors \cite{suzudo02}.
+But it is necessary to pay tribute to the good results obtained during implementation of the algorithm in the above article. Authors were able to reach very good permormance. In particular, the computation time per step was 3.7 s with 6 processors and it is much better compared to the result 3.9 s with 32 processors \cite{suzudo02}.
 
 Another interesting paper dedicated to the problem is "Lattice models of polycrystalline microstructures: A quantitative approach" \cite{rinaldi08}.
 
-Here authors refer to available methods for creating polycrystalline structure. Among several different approaches they mention Voronoi tesselation as a good method for obtaining the polycrystalline structure. It is noticed that this method is very popular and wide spread in fitting to the experimental data and therefore presented in special commercial software such as AMIRA, MIMICS, SURFDRIVER.
+Here authors refer to available methods for creating polycrystalline structure. Among several different approaches they mention Voronoi tessellation as a good method for obtaining a polycrystalline structure. It is noticed that this method is very popular and wide spread in fitting to the experimental data and therefore presented in special commercial software such as AMIRA, MIMICS, SURFDRIVER.
 
-Of course Voronoi tesselation method has disadvantages like that it represents only convex polyhedra that is not true for real polycrystals. It is also known that real grains are not necessary polyhedra at all. Nonetheless, Voronoi tesselation remains very quick and reliable method of generation structures close to the real polycrystalls. 
+Of course Voronoi tesselation method has disadvantages like that it represents only convex polyhedra that is not true for real polycrystals. It is also known that real grains are not necessary polyhedra at all. Nonetheless, Voronoi tessellation remains very quick and reliable method of generation structures close to the real polycrystalls. 
 
-In the paper it is also noticed that instead of focusing on precise microstructure it is much better focus on major statistics like  distribution of grain size and grain orientation. It is actually what I am doing in my work.
+In the paper it is also noticed that instead of focusing on precise microstructure it is much better focus on major statistics like  distribution of grain size and grain orientation. It is actually what is done in current study.
 
-However, in the paper the main goal is achieving the mechanically equivalent polycrystalline. Although this approach is good for mechanical properties of material it loses any other aspects of real matter. This is why I cannot apply current results in our research.
+However, in the paper the main goal is achieving the mechanically equivalent polycrystalline. Although this approach is good for mechanical properties of material it loses any other aspects of real matter. That reason leads that these results cannot be fully adapted for current research.
 
 Another significant result in realistic generation of polycrystalline structure was achieved in "Mechanical properties of polycrystalline graphene based on a realistic atomistic model" \cite{kotak12}.
 
 Here authors did great work in order to obtain realistic atomic structure of graphene. They implemented algorithm for atomic structure generation based on the growth principle. It means that after random location of grain centers they tried to simulate growth of grains by considering borders of growing grain step by step. They also followed misorientation distribution that have one to one correspondence with orientation distrubution. It is also emphasized the importance of realistic simulation of grain boundaries because of their significant impact on mechanical and electrical properties of material.
 
-The main disadvantages in the work is that the result is valid only for graphene and graphene like structures. I will try to bypass this limitation in my work. There is also problem with algorithm used in the paper. This approach needs more computing resources and have some difficulties in parallelism. Usually such structure construction need days for obtaining usable results if the system has usual for simulation sizes. The real distribution of grain sizes is absolutely neglected in the paper. It is considered only uniform distribution for the grains that does not follow real structures. But nonetheless, I borowed some ideas for misorientation distribution in my work.
+The main disadvantages in the work is that the result is valid only for graphene and graphene like structures. There is also problem with algorithm used in the paper. This approach needs more computing resources and have some difficulties in parallelism. Usually such structure construction needs days for obtaining usable results if the system has usual for simulation sizes (millions of particles). The real distribution of grain sizes is absolutely neglected in the paper. It is considered only uniform distribution for the grains that does not follow most of real structures. But nonetheless, some ideas for misorientation distribution were taken for work described in current thesis.
 
-In following "Studying the elastic properties of nanocrystalline copper using a model of randomly packed uniform grains" \cite{guo13} paper I found interesting new approach in studying mechanincal properties of nanoscaled polycrystalline materials. Authors offer concentrate on finding dependency of elastic module on grain boundaries and therefore they make artificial ideal polycrystall where they obtain uniform grain sizes that is not true for realistic structures.
+In following "Studying the elastic properties of nanocrystalline copper using a model of randomly packed uniform grains" \cite{guo13} paper an interesting new approach in studying mechanincal properties of nanoscaled polycrystalline materials was found. Authors offer to concentrate on finding dependency of elastic module on grain boundaries and therefore they make artificial ideal polycrystall where they obtain uniform grain sizes that is not true for most of realistic structures.
 
-The last very interesting paper to talk about that was considered during literature overview was "Generation of 3D polycrystalline microstructures with a conditioned Laguerre-Voronoi tessellation technique" \cite{falco15}.
+The last very interesting paper to talk about which was considered during literature overview was "Generation of 3D polycrystalline microstructures with a conditioned Laguerre-Voronoi tessellation technique" \cite{falco15}.
 
-Here authors got really singnificant results in obtaining very close to real size distribution polycrystalline structure. In order to do this they used extended Voronoi tessellation method so called Laguerre-Voronoi tessellation. They implemented procedures that allows to associate particles weights with the grains sizes. This method helps to obtain very realistic distribution of grain sizes and use it in the following simulation that they actually did. During simulation using this kind of tessallation they compared simulation results with real experiments with annealed aluminum. Obtained results show high efficiency of this approach and can be used in our work too. Thank to developer of Voro++ library this tessellation is already implemented in the library and I can use Laguerre-Voronoi tesselation as first approximation in our genetic algorithm. It can significantly improve time of calculation.
+Here authors got really singnificant results in obtaining very close to real size distribution polycrystalline structure. In order to do this they used extended Voronoi tessellation method so called Laguerre-Voronoi tessellation already mentioned above \cite{fan04}. They implemented procedures that allow to associate particles' weights with the grains sizes. This method helps to obtain very realistic distribution of grain sizes and use it in the following simulation that they actually did. During simulation using this kind of tessallation they compared simulation results with real experiments with annealed aluminum. Obtained results show high efficiency of this approach and can be used in our work too. Thank to developer of Voro++ library this tessellation is already implemented in the library and one can use Laguerre-Voronoi tesselation as first approximation in genetic algorithm. It can significantly improve time of calculation.
 
-Now from the papers about theoretical statements I move to the practical results that currently exist and can help to generate polycrystalline structure.
+Above articles were just theoretical statements with some obtained results. But it is also important to consider some practical software that currently exist and can help to generate polycrystalline structure.
 
-Firstly, I would like to mention very useful modern software so called nanoSculpt \cite{prak16}. It allows to construct atomic structure inside any shape and form. It also supports constructing of Voronoi tessellation for polycrystalls in any shape. It was written using C language and quite easy extensible. But unfortunatelly, currently this package does not support following particular distribution of grain size and orientation during costruction of structure. 
+Firstly, I would like to mention very useful modern software so called nanoSculpt \cite{prak16}. It allows to construct atomic structure inside any shape and form. It also supports constructing of Voronoi tessellation for polycrystalls in any shape. It was written using C language and quite easy extensible. But unfortunatelly, currently this package does not support user defined particular distribution of grain size and grain orientation during costruction of structure. 
 
-Another interesting tool is AtomEye \cite{juli03} developed by MIT staffs. It is very comprehensive and powerfull tool for dealing with atomic structure. One of the most interesting util for me in this package is so called voronoirize tool. It can be used for building polycrystalline structures. The software is written in C language. But again problem it does not follow user defined distributions of sizes and orientations. 
+Another interesting tool is AtomEye \cite{juli03} developed by MIT staffs. It is very comprehensive and powerfull tool for dealing with atomic structure. One of the most interesting utility in this package is so called voronoirize tool. It can be used for building polycrystalline structures. The software is written in C language and this might be considered as advantage. But it has same problem - it does not follow user defined distributions of sizes and orientations. 
 
-And the last tool that I would like to mention is Atomsk \cite{hirel15}. According to the website title of the utils it is the Swiss-army knife of atomic simulations. It supports many and many methods for atomic simulation. You can obtain numereous output format for any simulation programs you need. But I faced the same problem as in mentioned above tools. To generate polycrystalline structure with particular distributions you need to define orientation and size for each grain by hand. It is not convinient in particular with big sized simulation boxes. Moreover this util is written in Fortran language that is not very convinient tool for wide support and extension. Particularly in industry field.
+And the last tool that is mentioned in current work is Atomsk \cite{hirel15}. According to the website title of the utility it is the Swiss-army knife of atomic simulations. It supports many and many methods for atomic simulation. One can obtain numereous output format for any simulation programs one need. But one will face the same problem as in mentioned above tools. To generate polycrystalline structure with particular distribution one needs to define orientation and size for each grain by hand. It is not convinient in particular with big sized simulation boxes. Moreover this utility is written in Fortran language that is not very convinient tool for wide support and extension. Particularly in industry field.
 
-As you can see there are many researchs and tool dedicated to the problem of generating of polycrystalline structures. But there are several problems that you can face while using them. Firstly they do not support generation based on user defined distribution that makes these tools very hard to use in realistic conditions. Secondly, tools and methods which support realistic structures work on very slow algorithm that needs days for obtaining trustful results. Thirdly, sometimes tools are written in "not good" languages and are hard to maintain.
+As one can notice there are many researches and tools dedicated to the problem of generating of polycrystalline structures. But there are several problems that one can face while using them. Firstly they do not support generation based on user defined distribution that makes these tools very hard to use in realistic conditions. Secondly, tools and methods which support realistic structures work on very slow algorithm that needs days for obtaining trustful results. Thirdly, sometimes tools are written in "not good" languages and are hard to maintain.
 
-These all reasons inspired me to create useful tool for generating realistic polycrystalline structure written in C++ language and backed by LAMMPS simulation software.
+These all reasons inspired this study to create useful tool for generating realistic polycrystalline structure written in C++ language and backed by LAMMPS simulation software. For Voronoi tessellation method Voro++ library is used.
 
 \section{Building the Voronoi tessellation}
 
-As it was mentioned above I use Voronoi tessellation for building polycrystalline structure. But for obtaining real stucture I have to fit some properties of natural crystalls during generation of tessellation. In this work I am especially interested in fitting tessellation to the two crucial distributions: grain size distribution and grain orientation distribution. All generation done in periodic condition of the boundary.
+As it was mentioned above Voronoi tessellation for building polycrystalline structure is used for this work. But for obtaining real stucture one has to fit some properties of natural crystalls during generation of tessellation. In this work special interest dedicated in fitting tessellation to the two crucial distributions: grain size distribution and grain orientation distribution. All generation done in periodic condition of the boundary.
 
 \subsection{Grain size distribution}
 
-Grain size distribution depends on many characteristics of polycrystal growth (velocity of crystallization, extra magnetic field etc) and environmental factors (temperature, pressure etc). It is widly beleived that in general any grain size distribution in polycrystals can be fitted to the lognormal function \cite{shen15, liu14}:
+Grain size distribution depends on many characteristics of polycrystal growth (velocity of crystallization, extra magnetic field etc) and environmental factors (temperature, pressure etc). It is widly beleived that in general any grain size distribution in polycrystals for most cases can be fitted to the lognormal function \cite{shen15, liu14}:
 
 \begin{equation} \label{lognormal}
 f(x) = \frac{1}{x} \frac{1}{\sigma \sqrt{2\pi}}exp(-\frac{(ln(x) - \mu)^2}{2\sigma^2})
 \end{equation}
 \bigbreak
 
-As one can see there are only 2 parameters that can influence distribution shape $ \sigma $ and $ \mu $. Environmental characteristics can change these 2 parameters and impact on grain size distribution. Of course, there are plenty other types of grain size distribution like bimodal lognormal distribution or uniform distribution. But in general, type of distribution does not affect to the research made in the current work and this is why just simple lognormal distribution is considered. Moreover \ref{lognormal} is used as a fitting function for the grain size distribution in overwhelming majority of scientific papers regarding polycrystalline structures \cite{shen15, liu14}.
+As one can see there are only 2 parameters that can influence distribution shape $ \sigma $ and $ \mu $. Environmental characteristics can change these 2 parameters and impact on grain size distribution. Of course, there are plenty other types of grain size distribution like bimodal lognormal distribution, uniform distribution and so forth. But in general, type of distribution does not affect to the research made in the current work and this is why just simple lognormal distribution is considered as a reference. Moreover \ref{lognormal} is used as a fitting function for the grain size distribution in overwhelming majority of scientific papers regarding polycrystalline structures \cite{shen15, liu14}.
 
-The reason why one can be interested in the grain size distribution is that this polycrystal matter description have direct effect to the mechanical and electromagnetic properties of the polycrystalline structure. And very often just knowledge of an average grain size cannot give us specific parameters of the material. In research about effect of grain size distribution on mechanical properties \cite{terada10} one can find dependency of yielding on the grain size distribution. In the paper annealed aluminum is considered. Depending on annealing temperature and lubrication authors obtained different grain size distributions and therefore different stress-strain dependency hence different yielding, though average grain size is the same for all specimen.
+The reason why one can be interested in the grain size distribution is that this polycrystalline matter's feature has direct effect to the mechanical and electromagnetic properties of the polycrystalline structure. And very often just knowledge of an average grain size cannot give us specific parameters of the material. In research about effect of grain size distribution on mechanical properties \cite{terada10} one can find dependency of yielding on the grain size distribution. In the paper annealed aluminum is considered. Depending on annealing temperature and lubrication authors obtained different grain size distributions and therefore different stress-strain dependency hence different yielding, though average grain size is the same for all specimen.
 
-Grain size distribution can be expressed as a dependency of appearing frequency of the grain size. But grain size can be interpreted in many different values. In paper one can find grain size as volume of grain, area of the surface of the grain, simple area in case of films (2D nano-objects) or grain diameter (sometimes radius). In this work diameter of a grain is chosen as a meause for the distribution. Moreover to make all evolutions dimensionless normalized grain size is used. Normalizing is made by dividing grain diameter with average grain diameter across all grains of the material. 
+Grain size distribution can be expressed as a dependency of appearing frequency on the grain size. But grain size can be interpreted in few different ways. In paper one can find grain size as volume of grain, area of the surface of the grain, simple area in case of films (2D nano-objects) or grain diameter (sometimes radius). In this work diameter of a grain is chosen as a meause for the distribution. Moreover to make all evolutions dimensionless normalized grain size is used. Normalizing is made by dividing grain diameter with average grain diameter across all grains of the material. 
 
-As an aim for the given work is to build some structure close to the given distribution (unimodal lognormal in this case) one need to become familiar with popular methods of achieving some particular distributions.
+An aim for the given work is to build some structure close to the given distribution (unimodal lognormal in this case). And one need to become familiar with popular methods of achieving some particular distributions.
 
-Monodispersive grain size model \ref{wang96} implies attempt to simulate polycrystall by identically-shaped rhombohedral grains. The main purpose of such simulation just research on some boundary effects. Of course such a model does not reflex the real structure.
+Monodispersive grain size model \ref{wang96} implies attempt to simulate polycrystall by identically-shaped rhombohedral grains. The main purpose of such simulation just research of some boundary effects. Of course such a model does not reflex the real structure.
 
-Poisson–Voronoi tessellation \ref{wear86} and Laguerre–Voronoi tessellation \ref{fan04} models are improvment for the classical Voronoi tessellation. These methods allow to fit some given distribution directly to the tessellation generation process. The methods are extremely fast compared to genetic algorithm described below. There is a problem, one obtains distribution similar to the reference distribution but the distribution not close enough to be able to say about dependency of particular distribution and material properties. However these approaches can be used as an extremely good first approximation for genetic algorithm.
+Poisson–Voronoi tessellation \ref{wear86} and Laguerre–Voronoi tessellation \ref{fan04} models are improvement for the classical Voronoi tessellation. These methods allow to fit some given distribution directly to the tessellation generation process. The methods are extremely fast compared to genetic algorithm described below. There is a problem though, one obtains distribution similar to the reference distribution, but the distribution not close enough to be able to say about dependency of particular distribution and material properties. However these approaches can be used as an extremely good first approximation for genetic algorithm.
 
-Classical Voronoi tessellation backed by genetic algorithm comprehensive and relatively modern method for polycrystalline structure generation. It is used here in work and will be discussed in detail below.
+Classical Voronoi tessellation backed by genetic algorithm is comprehensive and relatively modern method for polycrystalline structure generation. It is used here in work and will be discussed in detail below.
 
 Because of simplicity of implementation, low resource demanding, relatively fast computation and a few other advantages of the genetic algorithm method it was chosen as the only method for the generation not only grain size distribution but also orientation distribution and first level of relaxation of the structure. 
 
 \subsection{Genetic algorithm for the grain size distribution}
 
-There are several key elements and terms needed to define before implementation of genetic algorithm (GA). First of all when one refer to the GA it is needed to understand what is individual for the current task. In case of current work one deals with the Voronoi tessellation. Voronoi tessellation, in its turn, deals with a set of 3D points in the space so called seeds or generators. Thus the object that holds these seeds will be considered as an individual for the task. Remember that individual represents a solution for the given problem and in case of current research the right individual will generate correct polycrystalline structure hence solve the given task.
+There are several key elements and terms needed to define before implementation of \textit{\textbf{genetic algorithm}} (GA). First of all when one refer to the GA it is needed to understand what is \textit{\textbf{individual}} for the current task. In case of current work one deals with the Voronoi tessellation. Voronoi tessellation, in its turn, deals with a set of 3D points in the space so called seeds or generators. Thus the object that holds these seeds will be considered as an individual for the task. Remember that individual represents a solution for the given problem and in case of current research the right individual will generate correct polycrystalline structure hence solve the given task.
 
-The set of individuals is called population. The size of population is the number of individuals in the set. Population in some fixed time is called generation. The first generation influence strictly on the speed of GA's convergence. And not only speed but also problem of stucking in local minima also depends on initial population. Therefore strategy regarding forming initial generation can significantly impove GA. In this work uniform i.e. random generation of individuals is chosen. It helps to cover space of solutions independently and bypass local traps. Of course, the size of population is also important for good peformance. But this parameter will be chosen later based on calculation experiments.
+The set of individuals is called \textit{\textbf{population}}. The \textit{\textbf{size of population}} is the number of individuals in the set. Population in some fixed time is called generation. The first generation influences strictly on the speed of GA's convergence. And not only speed but also problem of stucking in local minima also depends on initial population. Therefore strategy regarding forming initial generation can significantly impove GA. In this work uniform, i.e. random generation of individuals is chosen. It helps to cover space of solutions independently and bypass local traps. Of course, the size of population is also important for good peformance. But this parameter will be chosen later based on calculation experiments.
 
-Another crucial term of GA is genome. Genome consists of genes and genes reflects some properties of the individual. In this work each 3D seed is considered as gene and the whole set of seeds for given individual is a genome. So, all further manipulations in GA will be done on set of seeds.
+Another crucial term of GA is \textit{\textbf{genome}}. Genome consists of genes and genes reflect some properties of the individual. In this work each 3D seed is considered as gene and the whole set of seeds for given individual is a genome. So, all further manipulations in GA will be done on set of seeds.
 
-In order to be able to manipulate genes one needs to encode them, convert from genotype to so called phenotype. It was chosen real number encoding for the seeds coordinates because it is natural and convinient representation of the 3D points. Each point is represented by set of 3 real numbers: x, y, z coordinate of corresponding 3D point. The whole genotype is kind of 2 dimensional array. First level of array has size of number of individuals. The inner level has size 3 - the number of coordinates. Thereby there is 3*N sized array representing an individual.
+In order to be able to manipulate genes one needs to encode them, convert from genotype to so called \textit{\textbf{phenotype}}. It was chosen real number encoding for the seeds coordinates because it is natural and convinient representation of the 3D points. Each point is represented by set of 3 real numbers: x, y, z coordinate of corresponding 3D point. The whole genotype is kind of 2 dimensional array. First level of array has size of number of individuals. The inner level has size 3 - the number of coordinates. Thereby there is 3*N sized array representing an individual.
 
-The fitness is characteristic of individual showing the approximation of indvidual's phenotype to the objective function. It is another important term that has to be defined. Instead of fitness calculation it might be calculated inverse value so called fitness penalty. It shows the same, how far or close the individual's phenotype to the defined function by taking some difference between expected and current values. In this work fitness penalty calculated by formula \cite{shen15}:
+The \textit{\textbf{fitness}} is characteristic of individual showing the approximation of indvidual's phenotype to the objective function. It is another important term that has to be defined. Instead of fitness calculation it might be calculated inverse value so called \textit{\textbf{fitness penalty}}. It shows the same, how far or close the individual's phenotype to the defined function by taking some difference between expected and current values. In this work fitness penalty calculated by formula \cite{shen15}:
 
 \begin{equation} \label{penalty}
 W^2 = \frac{1}{N} \sum_{i=1}^{N} [P_r(d_i) - P(d_i)]^2
@@ -137,21 +184,21 @@ The formula \ref{penalty} was chosen for the reason of fast convergence of GA wi
 
 Before moving to the discussion about GA operators it is needed to mention about \textit{\textbf{breeding}} and new population \textit{\textbf{selection}} strategies that are used in this work.
 
-\textit{\textbf{Breeding}} is the process of generation of new population candidates. It can be done by many different ways but in this work crossover and mutation operators are used for this purpose. After obtaining initial population the cycle runs to obtain all further generations. In this cycle successively crossover and mutation are applied. This gives candidates for the new generation. New candidates are mixed in common pool with the current population. The new population is selected based on individuals' fitness penalty. Best individuals go to the next generation and the process repeats until \textit{\textbf{stop criteria}} is reached.
+\textit{\textbf{Breeding}} is the process of generation of new population candidates. It can be done by many different ways but in this work crossover and mutation operators are used for this purpose. After obtaining initial population the cycle runs to obtain all further generations. In this cycle successively crossover and mutation are applied. This procedure gives candidates for the new generation. New candidates are mixed in common pool with the current population. The new population is selected based on individuals' fitness penalty. Best individuals go to the next generation and the process repeats until \textit{\textbf{stop criteria}} is reached (will be described later).
 
-Described breeding strategy was selected because of its simplicity and relatively ease of implementation. Furthermore it is classical scheme for the GA. Described selection strategy was chosen for the reason of guarantee of improvement of population from generation to generation.
+The described breeding strategy was selected because of its simplicity and relatively ease of implementation. Furthermore it is classical scheme for the GA. Described selection strategy was chosen for the reason of guarantee of improvement of population from generation to generation.
 
 As was mentioned, two classical operators are presented in this implementation of GA for size distribution. \textit{\textbf{Crossover}} operator is an operator allowing to mix up genomes of the individuals (parents) with the same analogy as crossing within species in nature. \textit{\textbf{Mutation}} operator is an operator allowing to generate new genomes (bring new information to the population) by changing somehow some part of genomes in individual.
 
 Crossover operator can be of different implementations but all implementations include two main elements: individual selection and crossover procedure. It worths to mention, that selection of individual for crossover and selection individuals for a new generation are absolutely different operations.
 
-Classical selection for crossover roulette wheel selection is not good choice for GA in current situation. Roulette wheel selection is very noisy and the rate of evolution strictly depends on the variance of population fitnesses. Another selection is random selection it is even more disruptive than roulette wheel and therefore it is also not acceptable. Tournament selection is the best variant for the current task. Competetion between individuals and random selection of individuals for the competitions bring selection pressure, which drives GA to get better fitness for the next generation. Finally, tournament selection was chosen for the GA implementation.
+There are number of selection for crossover strategies that will be discussed here. Classical selection for crossover \textit{\textbf{roulette wheel}} selection is not good choice for GA in current situation. Roulette wheel selection is very noisy and the rate of evolution strictly depends on the variance of population fitnesses. Another selection strategy is \textit{\textbf{random selection}}. It is even more disruptive than roulette wheel and therefore it is also not acceptable. \textit{\textbf{Tournament selection}} is the best variant for the current task. Competetion between individuals and random selection of individuals for the competitions bring selection pressure, which drives GA to get better fitness for the next generation. Finally, tournament selection was chosen for the GA implementation.
 
 Crossover procedure consists of two parts: cross site random selection and swapping genes between individuals following the cross site. Cross site selection might be one-, two- or multi-point. In this work it was used one- and two-points crossover because of it simplicity in implementation and good influence on the evolution rate. Uniform crossover is also implemented for diversity purpose and for ability to check how crossover operator impact on evolution rate and convergence of GA.
 
 In case of Voronoi tessellation's seeds it is necessary to define how evalute cross site selection. The seeds are 3D points in the space and therefore one can determine cross site as a plane dividing individual's volume into two parts in case of one-point crossover. In case of two-point crossover one needs 2 cross section planes and so forth for multi-point crossover. One-point crossover is selected as an operator for the current study therefore it is needed to find only one cross section plane. But the problem that to find such a plane you need to take into account problem of dividing individual's volume to the parts with the same number of particles (seeds). When you divide 2 volumes with randomly located seeds there is not guarantee that your division will be successful and corresponding parts of 2 individuals will contain equal amount of seeds. Even when one will try to adjust the plane to make division useful (bring it to such a condition that respective parts of individuals have the same amount of particles) and change the angle and/or shift of the plane it is much more probable that one will fail in such refinement (see Figure \ref{faildivision}).
 
-To avoid problem with planes seed-to-seed mapping approach was invented. Seed-to-seed mapping is some assosiation between seeds of one individual with seeds of another individual. The association for this study is made based on distance between seeds of two individuals. The distance was calculated after overlaying two sets of seeds in one volume. It's calculated only between seeds from different individuals. Example of such association is on Figure \ref{mappingindividuals}.
+To avoid problem with planes seed-to-seed mapping approach was introduced. Seed-to-seed mapping is some association between seeds of one individual with seeds of another individual. The association for this study is made based on distance between seeds of two individuals. The distance was calculated after overlaying two sets of seeds in one volume. It's calculated only between seeds from different individuals. Example of such association is on Figure \ref{mappingindividuals}.
 
 \begin{figure}
     \centering
@@ -436,45 +483,102 @@ The process of lattice generation is pretty simple. The grain's seed point is co
 
 After rotation one need to remove excess atoms that stay outside of the grain volume. This procedure is done in this way: for all planes of grain coefficients of the plane equation are calculated $Ax + By + Cz = D$, for the seed point with coordinates $(x_1, y_1, z_1)$ signs for each plane of grain are calculated $Ax_1 + By_1 + Cz_1 - D$, now the process repeated for all atoms of generated lattice and even if one sign differs from the sign of seed then this atom lie outside of grain volume and one needs to remove it.
 
-It is important to notice that if the generated lattice will be moved in any axis by distance equal to lattice constant then we obtain absolutelly similar position of atoms (inside of grain because of periodicity of lattice) but we still get different position of we shift generatio by distance less then lattice constant. This feature will be used during first step of relaxation and this possible shifting is called \textit{\textbf{shifting vector}} in current study. So, finally for each grain one got 9 parameters: 3 coordinates of seed, 3 coordinates of shifting vector, 3 Euler angles.
+It is important to notice that if the generated lattice will be moved in any axis by distance equal to lattice constant then we obtain absolutelly similar position of atoms (inside of grain because of periodicity of lattice) but we still get different position of we shift generatio by distance less then lattice constant. This feature will be used during first step of relaxation and this possible shifting is called \textit{\textbf{shifting vector}} in current study. So, finally for each grain one got 9 parameters: 3 coordinates of seed, 3 coordinates of shifting vector, 3 Euler angles. The result population of grains with atoms one can see on Figure \ref{cubefilled}
 
-[ToDo] show one filled polycrystalline structure (colored grains)
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{cube_filled}
+    \caption{Voronoi tessallation with filled grains}
+    \label{cubefilled}
+\end{figure}
 
 \section{Relaxation of atomic structure}
 
-[ToDo] say about energy minimization for the matter
+As well known, the nature acts in such a way that any body tends to energy minimization in order to exist. Therefore in order to obtain realistic structure one need to minimize energy of the system. In case of current work it is needed to find such positions of atoms which provide minimum potential energy of whole atoms set.
 
-[ToDo] say about potential used for total energy calculation
+The process of energy minimization is called relaxation of the system. In current work relaxation is made in two steps. First step involved genetic algorithm for grain atoms shifting and second one is about removing high tension atoms. By saying high tension one means atoms which bring positive or not enough negative value of potential energy to the system.
 
-[ToDo] explain how works optimization of shifting vector of the grains
+In this work Embeded Atom Method (EAM) is used for system energy calculation (see Appendix Figure \ref{eamappendix}. For the test purpose aluminum is taken as a reference element for properties checking. 
 
-[ToDo] say that we use GA for shifting optimization. explain searching strategy for the optimal configuration
+All energy calculations are done by using LAMMPS software build as a static library for linux system.
 
-[ToDo] show results for GA for shifting
+\subsection{Relaxation by grain atoms shifting}
 
-[ToDo] say how to optimize energy by removing excess atoms
+As was mentioned this is the first step of relaxation process. This approach is possible because of not ideal positioning of generated atoms for each grain. One can find that by shifting all atoms of grain one can increase or decrease energy of the system. This happens because shifting leads to increasing distances between atoms on some boundaries and decreasing distances on another boundaries. The aim of relaxation is to find optimal shifting for all grains. For this purpose genetic algorithm again in use. In this work "shifting relaxation" phrase is used to point this kind of relaxation.
 
-[ToDo] say about measure for bad atoms (bad atom ranging)
+Genetic algorithm for atoms shifting is based on the same principles as was discussed above for grain size and grain orientation. The same process of finding optimal configuration is done for this algorithm. 
 
-[ToDo] show results for atom removal optimization
+[ToDo] show results for optimal configuration finding for the shifting
+
+\subsection{Relaxation by removing excess atoms}
+
+Despite shifting relaxation some atoms have very high potential energy, sometime even positive value. This leads to unreasonable values of total energy of the system. Sometimes structure even could not exist in nature with such high values of energy and therefore one needs to remove such atoms if there are no another methods to relax the system.
+
+In order to understand what atoms are excess and needed to be removed one have to introduce some criteria or measure that will show how "bad" or "good" is atom. In this work the simple criteria of potential energy of the atom is used. Partucularly one can define some threshold for energy and remove all atoms exceeding this value of energy. The logically simplest threshold value is 0. If atom exceeds this energy (i.e. has positive energy contribution) then atom can be removed. The example result for such threshold is presented on Figures \ref{cubefilled} and \ref{cubefilled}.
+
+The process of excess atom removing is iterative. After removing of candidate total energy recalculation is needed. Because dependency of total energy is not linear in EAM it is difficult to predict how atom removal will affect on total energy of the system. If after atom removal total energy decreases this system alteration is accepted and next atom can be considered. Note, that after each atom removal it is needed to recalculate energies for all atoms and start "bad" atoms search from scratch, because it is hard to predict how removal will change energy of all atoms. The process continues until having all atoms with energy less or equal to the threshold value.
+
+
+[ToDo] show graphs for energy dumping for different thresholds
+
+\subsection{Relaxation by molecular static minimization}
+
+The next two steps of relaxation is out of the current program module and done just to complete the relaxation process. In reality researcher has to do this by himself in LAMMPS software or any another program suitable for molecular statics and molecular dynamics.
+
+The first step is searching for optimized size of simulation volume and position of atoms. For this purpose "minimize" LAMMPS command is used. The process done in loop in order to get deep optimal result. In each iteration rirstly relaxation of the simulation box performed, then only relaxation of particles' coordinates is done. Atfer several iteration one obtain staticaly relaxed structure.
+
+\subsection{Relaxation by molecular dynamics}
+
+The last step in relaxation process is molecular dynamics simulation. This step is done with the same LAMMPS software. 
 
 \section{Conclusion}
 
+During this work the main aim of the study was done - the tool for realistic polycrystalline structure generation was created. This tool has its own pros and cons. No one can guarantee that such a structure will fit for any polycrystalline structures in nature. Especially if one talks about sameness of grains. Voronoi tesselation cannot generate non-convex structures and is not allowing to have non-linear boundaries. But nonetheless this method can help to simulate many of natural structures with precision enough for many properties. It is also needed some extra manupulation with multi-type atom structure. One need to be carefull about neutral charge of the system. Nevertheless this tool provides very flexible and powerfull mechanism for obtaining close to experimental data polycrystalline structure. One need just define grain size, grain orientation distributions, lattice constant and prefered simulation box and just run the program. As a result one will get ready to use structure in lammps output format.
 
+Next step in this study might be universalization of algorithm in order to allow it to simulate more broad structures. Add pre-refinement such as Laguere-Voronoi tessellation which will allow to get structure very close to the given distribution in the very beginning of algorithm and will reduce total calculation time. There are few others approaches that will help with orientation distribution pre-refinement and with atom filling algorithms. They can help in further studies based on current tool.
+
+Make it more userfriendly. This tool should have console version like regular scientific application and allow users to interact with program via some commands. This is one of the directions of tool impovement.
+
+Add more detailed documentation and integrate different input and output formats. For now user has to define distibution functions in code and compile it in order to get some useable binary to generate necessary structure. It would be much more convinient to define functions as an input for console parameters or even to locate some file with functions where program can read data and operate with it during structure generation. The same situation with output of results. Currently only LAMMPS trajectory file is supported as output format. But it is needed to broaden available output formats.
+
+Among possible program extension genetic algorithm parameters manual control possibility might be considered. User has to have potential to control all about genetic algorithm in order to find parameters more suitable for user's case.
 
 \section{Acknowlegments}
 
 Financial support of the MathMods Erasmus Mundus program and especially prof. Bruno Rubino is gratefully acknowledged. Prof. Szymon Winczewski is aknowledged for his professional and careful supervision of this master thesis. M.Sc.Eng. Kamil Rybacki is aknowledged for his support in many issues during implementation of the software for the current research. Dr. eng. Karol Frydrych is acknowledged for suggestion how to calculate misorienation angle. Dr. Anton Pshenichnikov is aknowledged for suggestion about relaxation of the structure. Special acknowlegments for Gdansk University of Technology for providing access to the supercomputer.
 
+\goodbreak
 \section{Appendix}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{EAM_appendix}
+    \caption{Main idea of Embeded Atom Model potential}
+    \label{eamappendix}
+\end{figure}
 [ToDo] show genotype to phenotype encoding
 
-[ToDo] show block scheme of genetic algo for sizes and orientation
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{grain_size_blockscheme}
+    \caption{Grain size block scheme. Also valid for any genetic algorithm used in this work.}
+    \label{grainsizeblock}
+\end{figure}
 
-[ToDo] show block scheme for filling
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{GrainFillingScheme}
+    \caption{Grain filling procedure's block scheme}
+    \label{grainfillingblock}
+\end{figure}
 
-[ToDo] show block scheme for relaxation
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{RelaxationCommonBlockScheme}
+    \caption{Relaxation algorithm block scheme}
+    \label{relaxation block}
+\end{figure}
+
 
 [ToDo] give link to the repo
 

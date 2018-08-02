@@ -1,0 +1,113 @@
+1) logowanie na kdm-ap (węzeł dostępowy)
+ssh -X username@kdm.task.gda.pl
+-X (czasami -Y) => przekierowanie X-ów
+
+2) logowanie na tryton-ap (będąc a kdm-ap)
+ssh -X tryton
+
+3) zasoby
+a) katalog domowy (backupowane, ale ograniczona ilość miejsca)
+/users/kdm/username
+b) work (nie backupowane, duża ilość miejsca => 634 TB, bardzo wydajny zasób, tutaj liczyć, mogą usuwać stare dane bez ostrzeżenia)
+/users/work/username
+
+4) nice ./program => zmniejszenie priorytetu
+
+5) zlecanie zadań => system kolejkowy SLURM
+	squeue => wyświetl zadania w kolejkach
+	squeue -u username => wyświetl zadania użytkownika username
+	sinfo => informacja o stanie kolejek
+	sbatch => zlecanie zadań
+		sbatch <SLURM_SCRIPT>
+	scancel => anulowanie zadania
+		scancel <JOB_ID>
+
+6) najważniejsze kolejki
+	test => kolejka testowa, wysoki priorytet, krótki czas (max 15 minut), 
+	batch => kolejka robocza, normalny priorytet, długi czas (max 3 dni),
+
+7) zrównoleglenie
+	1 węzeł = 2 procesory 12 rdzeniowe = 24 rdzenie
+	--ntasks => liczba rdzeniu (w sumie)
+	--nodes => liczba węzłów
+
+	przykłady:
+	a) 12 rdzeni
+	--ntasks 12
+	--nodes 1
+	b) 24 rdzenie
+	--ntasks 24
+	--nodes 1
+	c) 48 rdzenie
+	--ntasks 48
+	--nodes 2
+	d) 96 rdzeni
+	--ntasks 96
+	--nodes 4
+
+8) LAMMPS - najlepiej zrównoleglenie hybrydowe
+	1 węzeł = 2 procesory (2 procesy MPI) x 12 rdzeni (12 wątków OpenMP)
+
+	export OMP_NUM_THREADS=12 => chcemy 12 wątów OpenMP per proces
+	mpirun: -np 2 => całkowita liczba procesów MPI
+		-perhost => 2 => liczba procesów MPI / per host (węzeł)
+
+	czyli zmieniamy (ewentualnie):
+	#SBATCH --nodes <NODES>		<NODES> => pożądana liczba węzłów
+	mpirun -np <NP>			<NP> => pożądana liczba procesów MPI (2x liczba węzłów)
+	#SBATCH --partition <PART_NAME> <PART_NAME> => docelowa kolejka
+	#SBATCH --time <TIME>		<TIME> => maksymalny czas zadania
+	#SBATCH --job-name <JOB_NAME>	<JOB_NAME> => nazwa zadania
+
+9) lmp_tryton_omp => skompilowany LAMMPS pod Trytona
+
+10) logowanie na węzeł:
+ssh <node_name>
+ssh gv1038
+
+11) inne isotne:
+a) moduły: w ~/.bashrc dodać:
+
+module avail                               1>/dev/null 2>/dev/null
+module add tryton/compiler/intel/2017      1>/dev/null 2>/dev/null
+module add tryton/mkl/2017                 1>/dev/null 2>/dev/null
+module add tryton/mpi/intel/2017           1>/dev/null 2>/dev/null
+module add tryton/slurm/14.11.4            1>/dev/null 2>/dev/null
+
+module avail
+module list
+module add <MODULE_NAME>
+
+b) PATH => przeszukiwane ścieżki, dodać w ~/.bashrc np.
+PATH=$PATH:~/bin/
+
+c) aliasy (user-defined commands), dodać w .bashrc
+alias work='cd /users/work/username'
+
+12) przykład symulacji w:
+/users/work/wisnia/EXAMPLE/
+
+13) dmv-tryton (data mover) => 153.19.250.178
+
+a) z trytona na maszynę lokalną
+	scp username@hostname:PATH/FILE ./
+	kopiujemy plik FILE, znajdujący się w lokalizacji PATH, z maszyny hostname,
+	do wd na maszynie lokalnej
+b) z maszyny lokalnej na trytona
+	scp ./file.tar.gz username@hostname:PATH/FILE
+
+14) montowanie zdalnych zasobów
+tworzymy na maszynie lokalnej katalog /home/username/MNT/tryton
+montujemy zasób:
+alias mnt_tryt='sshfs username@153.19.250.178:/users/work/username /home/username/MNT/tryton -o nonempty'
+odmontowujemy zasób:
+alias umnt_tryt='fusermount -u /home/username/MNT/tryton'
+wymaga pakiety sshfs
+
+15) na maszynie lokalnej generujemy klucz
+ssh-keygen (nie zabezpieczamy klucz hasłem)
+z katlogu .ssh kopiujemy klucz, znajduje się w id_rsa.pub
+na maszynie docelowej tworzymy katalog .ssh (jeżeli nie istnieje),
+w nim (jeżeli nie istnieje) tworzymy plik authorized_keys, 
+w którym wklejamy klucz (w jednej linii),
+

@@ -1,5 +1,6 @@
 echo none
 log none
+processors 1 1 1
 
 dimension 3
 boundary p p p

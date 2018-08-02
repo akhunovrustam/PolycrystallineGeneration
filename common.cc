@@ -31,8 +31,8 @@ int main(int argc, char *argv[]) {
 	cout << "relax 1" << endl;
 	string str = gn->RelaxFirst(argc, argv);
 	
-	cout << "relax 2" << endl;
-	gn->RelaxSecond(argc, argv, str);
+	// cout << "relax 2" << endl;
+	// gn->RelaxSecond(argc, argv, str);
 	
 	// gn->OutputForLAMMPS();
 	
