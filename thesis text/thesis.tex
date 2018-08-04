@@ -466,7 +466,19 @@ From 24 matrices one obtain 24 angles, but only smallest is valid for distributi
 
 There are many different misorientation angle distributions. The shape of distributions for different type of lattice can be found in Hans Grimmer's paper \cite{hans79}. But currently in the work just cubic lattice is beeing considered. This is why Mackenzie distribution \cite{mack58} is taken as a primary distribution for this study. It does not mean that only this distribution is possible to reach in frame of current work. The framework is able to fit any user defined distribution. But Mackenzie distribution is taken as a reference for initial research. 
 
-Default random grain orientation distribution is described by Mackenzie distribution. This is why when one generate grain orientation randomly and even pseudo-randomly one obtain distribution very close the Mackenzie distribution. In order to check if implemented algorith works with any kind of initial grain orientation distributions, the initial orientations selection algorithm was changed. Initial orientation selection is based on generating Euler angles within [0\degree, 9\degree] interval. This algorithm generates texture in simulated structure. The texture for polycrytalline is orientation distribution with some prefered direction.
+Default random grain orientation distribution is described by Mackenzie distribution. This is why when one generate grain orientation randomly and even pseudo-randomly one obtain distribution very close the Mackenzie distribution. In order to check if implemented algorith works with any kind of initial grain orientation distributions, the initial orientations selection algorithm was changed. Initial orientation selection is based on generating Euler angles within [0\degree, 9\degree] interval. This algorithm generates \textit{\textbf{texture}} in simulated structure. The \textit{\textbf{texture}} for polycrytalline is orientation distribution with some prefered direction.
+
+As one can understand, for fitness penalty calculation in this algorithm Mackenzie function was used. But what about other key elements of GA for orientation distribution? 
+
+Individual for this implementation is Voronoi structure obtained in previous grain size algorithm with some specified orientation of lattice, i.e. 3 Euler angles. To create first population some specified number of individuals with random Euler angles is generated.
+
+Crossover operator works here similarly to previos implementation in grain size algorithm, but instead of interchanging seeds, operator interchanges Euler angles between two individuals. Exchange is made by simple interchange of angels of two corresponding individuals' seeds. Because seeds in all individuals are the same and fixed, the exchange algorithm is pretty simple interchanging angles between seeds positioned on the same coordinates.
+
+Mutation operator works here by just simple slight changing of angles. Because in this study for now only cubic lattice is considered, one can limit all angles by 90 degree. It is possible due to cubic symmetry in the lattice. Thank to this property it is possible to determine fixed shifting parameter for mutation operator. Here it is k*90/100 degree, where k is coefficient defined as parameter in order to be able to control amplitude of shifting and find some optimal value.
+
+All the rest elements of GA here are implemented absolutely similarly to GA for grain size. The set of parameters is the same and therefore it needs 
+
+
 
 [ToDo] describe elements for GA of orientation
 
