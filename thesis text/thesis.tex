@@ -419,8 +419,15 @@ Second step of optimization of thresholds was done by fixing first threshold equ
 
 Of course these threshold parameters could be optimized more seriously but it goes away from the current work. The rest parameters remained as it was declared previously for default values.
 
-After having the optimal configuration, 1000 of session on such configuration were run in order to obtain the best fitted Voronoi structure and statistics for the configuration. The result of fitting is presented on Figure \iffalse \ref{lastconvergence} \fi  for convergence and on Figure \iffalse \ref{lastresult} \fi for comparison size distribution before GA application and after. During run, penalty reduced 1000 times compared to the initial distribution.
-On Figure \iffalse \ref{lastconvergence} \fi 3 lines are presented: the best individual's penalty, the worst individual's penalty and the average penalty for the number of evaluating of penalty function.
+After having the optimal configuration, 1000 of session on such configuration were run in order to obtain the best fitted Voronoi structure and statistics for the configuration. The result of runs is presented on Figure \ref{bestconfigsize} for convergence and on Figure \iffalse \ref{lastresult} \fi for comparison size distribution before GA application and after. During run, penalty reduced 1000 times compared to the initial distribution.
+On Figure \ref{bestconfigsize} 3 lines are presented: the best individual's penalty, the worst individual's penalty and the average penalty for the number of evaluating of penalty function.
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{best_config_sizealgo}
+    \caption{The best configuration for grain size GA}
+    \label{bestconfigsize}
+\end{figure}
 
 
 \subsection{Building the Voronoi tessellation fitting the given grain orientation distribution}
@@ -476,13 +483,34 @@ Crossover operator works here similarly to previos implementation in grain size 
 
 Mutation operator works here by just simple slight changing of angles. Because in this study for now only cubic lattice is considered, one can limit all angles by 90 degree. It is possible due to cubic symmetry in the lattice. Thank to this property it is possible to determine fixed shifting parameter for mutation operator. Here it is k*90/100 degree, where k is coefficient defined as parameter in order to be able to control amplitude of shifting and find some optimal value.
 
-All the rest elements of GA here are implemented absolutely similarly to GA for grain size. The set of parameters is the same and therefore it needs 
+All the rest elements of GA here are implemented absolutely similarly to GA for grain size. The set of parameters is the same and therefore it needs to be optimized. The optimization procedure follows similar step as was described above for grain size GA.
 
+For mutation operator types and crossover operator types pair comparison results are presented on Figures \ref{operatorcomparisonorient}, \ref{operatorcomparisonorientzoom},\ref{operatorcomparisonorienterr}. As one can see one-point crossover and uniform operators show the best rate of convergence in the start and long-time convergence in general. So this operators were chosen for GA for grain orientation.
 
+Similar computation experiments were done for mutation probability and population size. The best results are mutation probability equal 0.9 in the begining and population size equal 10.
 
-[ToDo] describe elements for GA of orientation
+For thresholds results are: first threshold is 200 and second is 400.
 
-[ToDo] show comparison of different pairs and configs
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{operators_comparison_orient}
+    \caption{Comparison of different implementations of mutation and crossover operators}
+    \label{operatorcomparisonorient}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{operators_comparison_zoom_orient}
+    \caption{Comparison of different implementations of mutation and crossover operators}
+    \label{operatorcomparisonorientzoom}
+\end{figure}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{operators_comparison_err_orient}
+    \caption{Comparison of different implementations of mutation and crossover operators}
+    \label{operatorcomparisonorienterr}
+\end{figure}
 
 [ToDo] show result for best configuration
 
