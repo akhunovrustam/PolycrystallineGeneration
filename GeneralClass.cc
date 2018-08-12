@@ -37,7 +37,7 @@ void General1Class::GrainSizeGenerate(int argc, char *argv[]){
 	//parse app arguments
 	// 5th - multiplication for mutation amplitude, 6th - from, 7th - to, 8th - 1st threshold, 9th - 2nd threshold
 	// 10th - factor for mp, 11th - 1st threshold factor for population size, 12th - 2nd threshold factor for population size
-	string prefix = "2p_uniform_0.8_10_1.0_10_100_500_1000_10_5_9";
+	string prefix = "2p_uniform_0.8_30_1.0_10_100_200_500_10_1_1";
 	config cfg;
 	int population_size;
 	parse_args(argc, argv, &prefix, &cfg, &population_size);
@@ -109,6 +109,7 @@ void General1Class::GrainSizeGenerate(int argc, char *argv[]){
 			cfg.mp = mprob/cfg.fac/cfg.fac;
 		}
 		
+		cout << "change configs: " << cfg.ps_fac << " " << cfg.mp << endl;
 		int min_penalty_index = -1;
 		int max_penalty_index = -1;
 		min_penalty = 1000000;
@@ -211,7 +212,7 @@ void General1Class::GrainSizeGenerate(int argc, char *argv[]){
 			stringstream image;
 	
 			image << "distributions_for_iteration_" << iterations << ".png";
-	
+			cout << "image:! " << image.str() << " " << filename << endl;
 			system(("gnuplot -e \"filename='" + image.str() + "'; prefix='" + filename + "'; penalty='" + to_string(min_penalty) + "'\" plot_first_tmp_auto.gp").c_str());
 		}
 		

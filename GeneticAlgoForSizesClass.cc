@@ -382,10 +382,10 @@ container** GeneticAlgoForSizesClass::crossover_by_mapping(container** con, doub
 	
 	int offspring_amount = surviving_size;
 	voronoicell_neighbor c1;
-	container** offspring_containers = new container*[population_size + 1];
+	container** offspring_containers = new container*[population_size * cfg.ps_fac + 1];
 	
 	std::map<double, int> penalty_rating;
-	for (int i = 0; i < population_size; i++)
+	for (int i = 0; i < population_size * cfg.ps_fac; i++)
 		penalty_rating[penalty[i]] = i;
 	
 	

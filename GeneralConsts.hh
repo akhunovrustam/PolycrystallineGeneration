@@ -8,10 +8,10 @@
 #define max_allowed_penalty 0.0001
 #define surviving_size 0
 #define population_size_const 32
-#define particles 80
+#define particles 1000
 #define mutation_probability_default 0.10
 #define mutation_max_applitude 0.05
-#define max_iterations 1000
+#define max_iterations 200000
 
 #define penalty_steps_orient 100
 #define penalty_step_orient 62.8/penalty_steps

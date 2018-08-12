@@ -1,0 +1,63 @@
+processors        * * *
+units             metal
+
+dimension         3
+boundary          p p p
+
+atom_style        atomic
+
+read_data 	      ./fcc_lattice.data
+mass              1 26.948
+
+velocity          all create 300.0 123 dist gaussian 
+
+pair_style        eam/alloy
+pair_coeff        * * ./AlCu.eamllb.alloy Al
+
+## ------ Number of minimizations ------
+
+variable    n_loop      equal   2
+
+## ------ Number of iterations an evaluations per minimiaztion loop ------
+
+variable    max_iters   equal   100
+variable    max_evals   equal   10000
+
+## ------ Tolerances for force, volume and energy change between iterations ------
+
+variable    del_vol     equal   0.1
+variable    eng_tol     equal   0
+variable    force_tol   equal   1.0e-6
+
+## ------ MS MINIMIZATION LOOP ------
+
+label           MIN_START
+
+variable        minimization_run loop ${n_loop}
+label           minimization_run_loop
+
+  fix             my_box_relax all box/relax iso 0.0 vmax ${del_vol}
+  minimize        ${eng_tol} ${force_tol} ${max_iters} ${max_evals}
+  unfix           my_box_relax
+  minimize        ${eng_tol} ${force_tol} ${max_iters} ${max_evals}
+
+next            minimization_run
+jump            SELF minimization_run_loop
+
+write_dump        all custom initial_configuration.lammpstrj id type x y z
+
+timestep          0.001
+fix               my_npt all npt temp 300.0 300.0 0.1 iso 0.0 0.0 1.0
+
+thermo            1
+#thermo_style      custom step temp pe ke etotal press vol
+thermo_style	  custom step etotal lx ly lz xy xz yz pxx pyy pzz pxy pxz pyz fmax fnorm
+
+dump              my_lammps_dump all custom 100 dump.lammpstrj &
+                  id type x y z vx vy vz fx fy fz
+
+run               30000
+
+
+
+

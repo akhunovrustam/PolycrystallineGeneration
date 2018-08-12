@@ -149,9 +149,9 @@ Grain size distribution can be expressed as a dependency of appearing frequency 
 
 An aim for the given work is to build some structure close to the given distribution (unimodal lognormal in this case). And one need to become familiar with popular methods of achieving some particular distributions.
 
-Monodispersive grain size model \ref{wang96} implies attempt to simulate polycrystall by identically-shaped rhombohedral grains. The main purpose of such simulation just research of some boundary effects. Of course such a model does not reflex the real structure.
+Monodispersive grain size model \cite{wang96} implies attempt to simulate polycrystall by identically-shaped rhombohedral grains. The main purpose of such simulation just research of some boundary effects. Of course such a model does not reflex the real structure.
 
-Poisson–Voronoi tessellation \ref{wear86} and Laguerre–Voronoi tessellation \ref{fan04} models are improvement for the classical Voronoi tessellation. These methods allow to fit some given distribution directly to the tessellation generation process. The methods are extremely fast compared to genetic algorithm described below. There is a problem though, one obtains distribution similar to the reference distribution, but the distribution not close enough to be able to say about dependency of particular distribution and material properties. However these approaches can be used as an extremely good first approximation for genetic algorithm.
+Poisson–Voronoi tessellation \cite{wear86} and Laguerre–Voronoi tessellation \cite{fan04} models are improvement for the classical Voronoi tessellation. These methods allow to fit some given distribution directly to the tessellation generation process. The methods are extremely fast compared to genetic algorithm described below. There is a problem though, one obtains distribution similar to the reference distribution, but the distribution not close enough to be able to say about dependency of particular distribution and material properties. However these approaches can be used as an extremely good first approximation for genetic algorithm.
 
 Classical Voronoi tessellation backed by genetic algorithm is comprehensive and relatively modern method for polycrystalline structure generation. It is used here in work and will be discussed in detail below.
 
@@ -419,16 +419,22 @@ Second step of optimization of thresholds was done by fixing first threshold equ
 
 Of course these threshold parameters could be optimized more seriously but it goes away from the current work. The rest parameters remained as it was declared previously for default values.
 
-After having the optimal configuration, 1000 of session on such configuration were run in order to obtain the best fitted Voronoi structure and statistics for the configuration. The result of runs is presented on Figure \ref{bestconfigsize} for convergence and on Figure \iffalse \ref{lastresult} \fi for comparison size distribution before GA application and after. During run, penalty reduced 1000 times compared to the initial distribution.
+After having the optimal configuration, 1000 of session on such configuration were run in order to obtain the best fitted Voronoi structure and statistics for the configuration. The result of runs is presented on Figure \ref{bestconfigsize} for convergence and on Figure \ref{lastresult} for comparison size distribution before GA application and after. During run, penalty reduced about 100 times compared to the initial distribution.
 On Figure \ref{bestconfigsize} 3 lines are presented: the best individual's penalty, the worst individual's penalty and the average penalty for the number of evaluating of penalty function.
 
 \begin{figure}
     \centering
     \includegraphics[width=5.0in]{best_config_sizealgo}
-    \caption{The best configuration for grain size GA}
+    \caption{The best configuration for grain size GA. Convergence of penalty}
     \label{bestconfigsize}
 \end{figure}
 
+\begin{figure}
+    \centering
+    \includegraphics[width=5.0in]{best_config_sizealgo_double}
+    \caption{The best configuration for grain size GA. Grain size distributions before and after algorithm run.}
+    \label{lastresult}
+\end{figure}
 
 \subsection{Building the Voronoi tessellation fitting the given grain orientation distribution}
 
@@ -501,19 +507,16 @@ For thresholds results are: first threshold is 200 and second is 400.
 \begin{figure}
     \centering
     \includegraphics[width=5.0in]{operators_comparison_zoom_orient}
-    \caption{Comparison of different implementations of mutation and crossover operators}
+    \caption{Comparison of different implementations of mutation and crossover operators. Zoomed in the end.}
     \label{operatorcomparisonorientzoom}
 \end{figure}
 
 \begin{figure}
     \centering
     \includegraphics[width=5.0in]{operators_comparison_err_orient}
-    \caption{Comparison of different implementations of mutation and crossover operators}
+    \caption{Comparison of different implementations of mutation and crossover operators. Error bars.}
     \label{operatorcomparisonorienterr}
 \end{figure}
-
-[ToDo] show result for best configuration
-
 
 \section{Filling tessellation with particles (atoms)}
 
@@ -569,7 +572,9 @@ The first step is searching of optimized size of simulation volume and position 
 
 \subsection{Relaxation by molecular dynamics}
 
-The last step in relaxation process is molecular dynamics simulation. This step is done with the same LAMMPS software. 
+The last step in relaxation process is molecular dynamics simulation. This step is done with the same LAMMPS software. The process is not complicated. All simulations done in 300K temperature, 0Pa pressure. For this purpose "velocity" command is used to give initial speed for atoms. Gaussian (Boltzman) distribution is used for velocities. NPT simulation fix is used as a base for simulation.
+
+After 30000 runs final relaxed structure is obtained.
 
 \section{Conclusion}
 

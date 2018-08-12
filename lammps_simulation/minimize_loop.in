@@ -1,0 +1,37 @@
+
+## ----- MINIMIZATION PARAMETERS -----
+
+## ------ Number of minimizations ------
+
+variable    n_loop      equal   20
+
+## ------ Number of iterations an evaluations per minimiaztion loop ------
+
+variable    max_iters   equal   1000
+variable    max_evals   equal   10000
+
+## ------ Tolerances for force, volume and energy change between iterations ------
+
+variable    del_vol     equal   0.1
+variable    eng_tol     equal   0
+variable    force_tol   equal   1.0e-6
+
+## ------ MS MINIMIZATION LOOP ------
+
+label           MIN_START
+
+variable        minimization_run loop ${n_loop}
+label           minimization_run_loop
+
+  fix             my_box_relax all box/relax tri 0.0 vmax ${del_vol}
+  minimize        ${eng_tol} ${force_tol} ${max_iters} ${max_evals}
+  unfix           my_box_relax
+  minimize        ${eng_tol} ${force_tol} ${max_iters} ${max_evals}
+
+next            minimization_run
+jump            SELF minimization_run_loop
+
+jump            ./deform.in MIN_END
+
+thermo_style	custom etotal lx ly lz xy xz yz pxx pyy pzz pxy pxz pyz fmax fnorm
+thermo 1

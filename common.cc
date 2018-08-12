@@ -17,12 +17,12 @@ int main(int argc, char *argv[]) {
 	
 	cout << "size generation grains" << endl;
 	gn->GrainSizeGenerate(argc, argv);
+	exit(0);
 	
 	cout << "orient generation grains" << endl;
 	gn->GrainOrientationGenerate(argc, argv);
 	
 	gn->writeAll();
-	// exit(0);
 	
 	// gn->loadAll();
 	cout << "fill grains" << endl;
